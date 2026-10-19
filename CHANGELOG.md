@@ -1,5 +1,12 @@
 # Changelog
 
+## GitHub-Projektpaket 0.1.4 — 2026-10-19
+
+- `PROJECT_STATUS.md` als verbindlichen Überblick über zuletzt berichteten Hardware-/Softwarestand, Pinbelegung, Home-Assistant-Entitäten, offene Probleme und Update-Workflow angelegt.
+- README Deutsch/Englisch mit der Statusdatei verlinkt und einen veralteten MakerWorld-Platzhalter in der deutschen README korrigiert.
+- Keine funktionalen Änderungen: Firmware weiterhin v1.9.6, Home Assistant weiterhin v2.1.0.
+
+
 ## GitHub-Projektpaket 0.1.3 — 2026-10-19
 
 - Das veröffentlichte 3D-Druck-Gehäuse mit MakerWorld-Modell und Druckprofil in den deutschen und englischen Projektdokumenten verlinkt.

@@ -4,6 +4,7 @@ A Wemos D1 mini / ESP8266 DIY sensor hub with **six logical DS18B20 slots (three
 
 The repository is prepared for GitHub as a **prototype**, not a finished or certified product. The matching 3D-printed enclosure has been [published on MakerWorld](https://makerworld.com/en/models/3464324-wemos-d1-gehause-fur-ds18b20-und-relais#profileId-3953596).
 
+- Current development and test status (German): [PROJECT_STATUS.md](PROJECT_STATUS.md)
 - German assembly guide: [docs/hardware/BAUANLEITUNG.md](docs/hardware/BAUANLEITUNG.md)
 - Pin map and electrical notes: [docs/hardware/ANSCHLUSSPLAN.md](docs/hardware/ANSCHLUSSPLAN.md)
 - Home Assistant install: [docs/home-assistant/INSTALLATION.md](docs/home-assistant/INSTALLATION.md)

@@ -6,6 +6,12 @@ Eine modulare Sensorzentrale für den Heizungskeller: Das kleine Board sammelt M
 
 > **Projektstatus: erprobter Prototyp, kein zertifiziertes Fertigprodukt.** Die Wemos-Firmware v1.9.6 und das Home-Assistant-Paket v2.1.0 wurden aus dem tatsächlich verwendeten Entwicklungsstand übernommen. Es gibt keinen vollständigen reproduzierbaren Hardware-, Kompilier- oder HA-Integrationstest für diesen GitHub-Export. Beim ersten Nachbau Pins und Spannungen messen.
 
+## Aktueller Entwicklungsstand
+
+**[→ PROJECT_STATUS.md – getesteter Stand, GPIO-Belegung, offene Aufgaben und Arbeitsablauf](PROJECT_STATUS.md)**
+
+Die GitHub-Dateien sind die gemeinsame Codebasis für zukünftige Weiterentwicklung. Der zuletzt getestete Gerätestand und bekannte Einschränkungen stehen in der Statusdatei, nicht in alten Chat-ZIPs.
+
 ## Projektbilder – Gehäuse, Montage und Dashboard
 
 | Gehäuse mit Elektronik | Fertig montiert | Home Assistant |
@@ -55,7 +61,7 @@ Das Verbrauchspaket ist **standardmäßig deaktiviert**, bis Tankkalibrierung un
 
 ## Gehäuse und MakerWorld
 
-Das 3D-gedruckte Gehäuse ist bereits als Konstruktion vorgesehen, **STL/3MF und Druckprofil sind diesem Repository aber noch nicht beigefügt**. Hier findest du einen Platz für die Gehäusedateien und einen Veröffentlichungsentwurf: [`enclosure/`](enclosure/README.md). Die eigene MakerWorld-Veröffentlichung soll später separat verlinkt werden.
+Das 3D-gedruckte Gehäuse ist bereits [auf MakerWorld veröffentlicht](https://makerworld.com/en/models/3464324-wemos-d1-gehause-fur-ds18b20-und-relais#profileId-3953596). Die 3MF-/STL-Dateien und Druckprofile werden dort bereitgestellt; GitHub enthält [Gehäusedokumentation und Fotos](enclosure/README.md).
 
 ## Sicherheit
 
