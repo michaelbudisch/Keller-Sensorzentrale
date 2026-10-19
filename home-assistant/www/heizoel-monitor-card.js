@@ -1,5 +1,5 @@
 /* Keller Sensorzentrale UI engine v1.0.0 — no external dependencies */
-const HM_VERSION = '2.1.0';
+const HM_VERSION = '2.1.1';
 const HM_FIELDS = [
  ['total','Gesamtbestand (5 Min)','sensor','keller_tank_gesamt_5min|gesamtbestand.*(gesch|geschätzt)|estimated_total_liters'],
  ['single','Einzeltank (5 Min)','sensor','keller_tank_einzeln_5min|tank_einzeln|tank einzeln|tank_liters'],
@@ -262,7 +262,17 @@ class HeizoelMonitorCard extends HTMLElement {
  getGridOptions(){return {columns:12,min_columns:4,rows:11,min_rows:6};}
  set hass(hass){this._hass=hass;this._schedule();}
  connectedCallback(){this.shadowRoot.addEventListener('click',(e)=>this._click(e));this._schedule(true);}
- _mapping(){const cfg=this._config||{};return {...(cfg.entities||{}),...(cfg.entity?{total:cfg.entity}:{})};}
+ _mapping(){
+   const cfg=this._config||{}, mapped={...(cfg.entities||{})};
+   // Eine alte Lovelace-Konfiguration `entity:` darf die neuen `entities.total`-Werte
+   // nicht überschreiben. Den Altwert nur nutzen, falls keine moderne Total-Entität
+   // vorhanden ist und der alte Sensor in Home Assistant noch existiert.
+   if(!hmSafeId(mapped.total)&&hmSafeId(cfg.entity)&&
+      !this._hass?.states?.[HM_DEFAULTS.total]&&this._hass?.states?.[cfg.entity]){
+     mapped.total=cfg.entity;
+   }
+   return mapped;
+  }
  _map(){return hmAutoMap(this._hass,this._mapping());}
  _signature(){const m=this._map();return ['total','single','percent','fault','low','daily','weekly','monthly','yearly',...Array.from({length:6},(_,i)=>'temp'+(i+1)),'relay1','relay2'].map(k=>this._hass?.states?.[m[k]]?.state??'').join('|')+'_'+this._range;}
  _schedule(force=false){if(!this.isConnected||!this._hass||!this._config)return;const sig=this._signature();if(!force&&sig===this._lastSig)return;if(!force&&Date.now()-this._lastPaint<1600)return;if(this._pending)return;this._pending=true;Promise.resolve().then(()=>{this._pending=false;this._render()});}

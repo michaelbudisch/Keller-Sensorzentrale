@@ -1,6 +1,6 @@
 # Home Assistant – Installation und Update
 
-**Basis:** Wemos v1.9.6 + Dashboard/Panel v2.1.0. Die Dateinamen `heizoel-monitor-card.js` und `heizoel_dashboard_panel` sind aus Bestandskompatibilität bewusst erhalten; sichtbarer Titel „Kellersteuerung“.
+**Basis:** Wemos v1.9.6 + Home-Assistant-Packages/Seitenpanel v2.1.0 + Lovelace-Karte v2.1.1. Die Dateinamen `heizoel-monitor-card.js` und `heizoel_dashboard_panel` sind aus Bestandskompatibilität bewusst erhalten; sichtbarer Titel „Kellersteuerung“.
 
 ## 1. Backup
 
@@ -31,6 +31,18 @@ homeassistant:
 Keine zweiten `homeassistant:`- oder `heizoel_dashboard_panel:`-Blöcke erzeugen. Die bisherigen Felder des Panels können weiterverwendet werden; ein Beispiel findest du unter [`home-assistant/`](../../home-assistant/configuration_BEISPIEL.yaml) (Auszug, keine vollständige Konfiguration).
 
 **Entitäts-IDs prüfen:** In der Testinstallation heißt der rohe Abstand `sensor.heizungskeller_sensoren_abstand_geglattet` (tatsächlich **geglattet**, ohne „ae“). Wenn sich dein HA-Gerät anders nennt, musst du die Quelldaten und Panel-Zuordnung anpassen.
+
+## Lovelace-Karte: alte Anzeige oder falscher Gesamtbestand
+
+Die **Lovelace-Karte** `custom:heizoel-monitor-card` ist nicht dasselbe wie das eigenständige **Seitenleistenpanel** `/heizoel-monitor`. Wenn die Seitenleiste „Kellersteuerung“ funktioniert, die Lovelace-Karte aber noch „Heizölmonitor“ mit leeren Literwerten zeigt, ist häufig die alte Datei oder die alte Karten-YAML aktiv.
+
+1. **Backup** der bisherigen Karten-YAML und `/config/www/heizoel-monitor-card.js`.
+2. Aktuelle **`home-assistant/www/heizoel-monitor-card.js` (v2.1.1)** nach `/config/www/heizoel-monitor-card.js` kopieren.
+3. Unter **Einstellungen → Dashboards → Ressourcen** die bereits existierende JS-Modul-Ressource auf **`/local/heizoel-monitor-card.js?v=211`** ändern. **Keine zweite Ressource mit gleicher Datei hinzufügen.**
+4. Betroffene Lovelace-Karte bearbeiten → Code-Editor: Einen alten Eintrag `entity:` entfernen und stattdessen `entities:` mit `total: sensor.keller_tank_gesamt_5min`, `single: sensor.keller_tank_einzeln_5min`, `percent: sensor.keller_tank_fuellstand_5min` verwenden. [Vollständiges Kartenbeispiel](../../home-assistant/Dashboard_Karte_Beispiel.yaml).
+5. Dashboard neu laden (`Strg+F5`) oder im privaten Fenster öffnen. Solange die alte Oberfläche erscheint, ist noch die alte JS-Version aktiv.
+
+**Kein Wemos-Flash und keine HA-Package-Änderung nötig.** Bestehende Verbrauchsstatistiken nicht zurücksetzen.
 
 ## 4. YAML prüfen und Neustart
 

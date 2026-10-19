@@ -1,6 +1,6 @@
 # Projektstatus – Keller Sensorzentrale
 
-**Stand:** 19.10.2026 · **GitHub-Dokumentationsstand:** v0.1.4 · **Status:** im eigenen Aufbau erprobter Prototyp, kein zertifiziertes Fertigprodukt.
+**Stand:** 19.10.2026 · **GitHub-Dokumentationsstand:** v0.1.5 · **Status:** im eigenen Aufbau erprobter Prototyp, kein zertifiziertes Fertigprodukt.
 
 > **Startpunkt für neue Chats und Beiträge:** Vor Änderungen diese Datei und die jeweils aktuellen GitHub-Quelldateien lesen. Der Code im Branch `main` ist die öffentliche Quellbasis; die genaue Konfiguration des bereits installierten Geräts kann davon abweichen. Für Live-Einstellungen und Probleme stets aktuelle Screenshots, Diagnosedaten oder Konfigurationsauszüge heranziehen. Keine Passwörter oder privaten Zugangsdaten ins Repository übernehmen.
 
@@ -11,7 +11,7 @@ Ein Wemos D1 mini (ESP8266) liest einen Ultraschall-Tanksensor und bis zu sechs 
 | Bereich | Öffentlicher Stand | Praxiserfahrung / Grenzen |
 | --- | --- | --- |
 | ESP8266-Firmware | **v1.9.6 (HA-Lite / Statusfix)** | Eingebauter Wemos übermittelt Tankwerte und MQTT-Status; GitHub-Sketch ist eine von Zugangsdaten bereinigte Vorlage, kein binär identisches Abbild des laufenden Geräts. |
-| Home Assistant | **v2.1.0 (Dashboard, Panel, Packages)** | Tankabstand, geglättete Liter und Gesamtbestand erschienen in HA; Schalten der Relais über MQTT/HA wurde beobachtet. |
+| Home Assistant | **HA-Pakete/Seitenpanel v2.1.0, Lovelace-Karte v2.1.1** | Tankabstand, geglättete Liter und Gesamtbestand erschienen in HA; Schalten der Relais über MQTT/HA wurde beobachtet. |
 | Tankmessung | **Aktiv, ein Sensor** | Bei der letzten Rückmeldung funktionierten Distanzmessung und Literanzeige. Beide mechanischen Tankuhren zeigten ungefähr den gleichen Stand; exakte Messtoleranz nicht bestimmt. |
 | Tankhochrechnung | **Zwei gleichartige Tanks** | Gemessen wird ein Tank; der zweite wird aus gleichem angenommenem Füllstand hochgerechnet. Im HA-Package ist die aktuelle Einzelkapazität **720 L** für den Prozentwert fest hinterlegt; bei anderen Tanks anpassen. |
 | Temperaturslots | **Sechs Buchsen/Slots vorgesehen** | Auf der Platine verdrahtet, aber zur letzten Rückmeldung waren **keine angeschlossenen DS18B20-Messwerte** bestätigt. Anzeige und Verlauf daher noch leer. |
@@ -47,6 +47,7 @@ Ein Wemos D1 mini (ESP8266) liest einen Ultraschall-Tanksensor und bis zu sechs 
 **Home Assistant:**
 - [Installationsanleitung](docs/home-assistant/INSTALLATION.md) und [Dateien](home-assistant/).
 - Bestehende Namen aus Kompatibilitätsgründen beibehalten: `www/heizoel-monitor-card.js`, `custom_components/heizoel_dashboard_panel`, Panel-Pfad `/heizoel-monitor`; sichtbarer Titel **Kellersteuerung**.
+- Lovelace-Kartenupdate v2.1.1: Eine alte `entity:`-Angabe in Karten-YAML darf `entities.total` nicht überschreiben. Bei alter Karte JS-Datei ersetzen, Ressource `/local/heizoel-monitor-card.js?v=211` nutzen und YAML prüfen; siehe [Installation](docs/home-assistant/INSTALLATION.md#lovelace-karte-alte-anzeige-oder-falscher-gesamtbestand).
 - HA-Packages liegen im Ordner **`packages/` unmittelbar neben der aktiven `configuration.yaml`**. Bei der realen Installation führte ein irrtümliches zusätzliches `config/`-Unterverzeichnis dazu, dass Helfer zunächst fehlten.
 - Bestätigte MQTT-Rohentität: **`sensor.heizungskeller_sensoren_abstand_geglattet`**, ausdrücklich **`geglattet`**, nicht `geglaettet`. Dies war zuvor ein echter Zuordnungsfehler.
 - HA-Filter/Template-Entitäten: `sensor.keller_tank_abstand_5min`, `sensor.keller_tank_einzeln_5min`, `sensor.keller_tank_gesamt_5min`, `sensor.keller_tank_fuellstand_5min`.

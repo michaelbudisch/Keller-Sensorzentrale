@@ -1,6 +1,8 @@
 # In einem Home Assistant Lovelace-Dashboard als manuelle Karte einfuegen:
 # Ressource muss zuvor registriert sein:
-# /local/heizoel-monitor-card.js   Typ: JavaScript-Modul
+# /local/heizoel-monitor-card.js?v=211   Typ: JavaScript-Modul
+# WICHTIG: Alte Einzelangabe `entity:` aus alten Karten entfernen.
+# Nur `entities.total` verwenden; bei bestehender Ressource die URL aktualisieren, keine Dublette anlegen.
 
 type: custom:heizoel-monitor-card
 title: Kellersteuerung

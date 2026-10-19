@@ -1,5 +1,12 @@
 # Changelog
 
+## GitHub-Projektpaket 0.1.5 — 2026-10-19
+
+- **Lovelace-Karte v2.1.1**: Eine alte Karten-YAML-Angabe `entity:` kann nicht mehr die aktuelle Zuordnung `entities.total` überschreiben; Altwert nur noch als Fallback, wenn kein moderner Gesamtbestandssensor vorhanden ist.
+- Anleitung für den Austausch von `www/heizoel-monitor-card.js`, Cache-Busting `?v=211` und die explizite Entitätszuordnung ergänzt.
+- Wemos-Firmware v1.9.6, HA-Packages und eigenständiges Seitenleistenpanel v2.1.0 unverändert.
+
+
 ## GitHub-Projektpaket 0.1.4 — 2026-10-19
 
 - `PROJECT_STATUS.md` als verbindlichen Überblick über zuletzt berichteten Hardware-/Softwarestand, Pinbelegung, Home-Assistant-Entitäten, offene Probleme und Update-Workflow angelegt.
