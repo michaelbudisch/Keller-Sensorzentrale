@@ -1,0 +1,43 @@
+# OPTIONAL. Diese Datei NICHT ungeprueft in /config/packages/ kopieren!
+# Nur verwenden, wenn der Tankgeber fest montiert und die Referenzhoehe
+# (Abstand Messflaeche zu Tankboden) am eigenen Tank gemessen ist.
+# Die Hoehen/Liter-Werte stammen aus der vorherigen PROVISORISCHEN
+# Kalibriertabelle fuer einen DEHOUST PE-Kombi 720; vor Ort validieren.
+#
+# Wemos muss dafuer weiterhin Abstand (Median) senden, aber die Liter-
+# Umrechnung kann mit dieser Datei nach Home Assistant verlegt werden.
+# Nach Aktivierung kann in packages/keller_sensorzentrale.yaml bei
+# "Keller Tank einzeln 5min" die entity_id auf
+# sensor.keller_tank_einzeln_kennlinie_ha geaendert werden.
+
+template:
+  - sensor:
+      - name: Keller Tank einzeln Kennlinie HA
+        unique_id: keller_tank_einzeln_kennlinie_ha
+        default_entity_id: sensor.keller_tank_einzeln_kennlinie_ha
+        unit_of_measurement: L
+        state_class: measurement
+        icon: mdi:barrel
+        availability: >-
+          {% set abstand = states('sensor.keller_tank_abstand_5min') | float(none) %}
+          {% set referenz = 119.0 %} {# An eigenem Tank messen! #}
+          {{ abstand is not none and 0 <= referenz - abstand <= 101.5 }}
+        state: >-
+          {% set abstand = states('sensor.keller_tank_abstand_5min') | float(0) %}
+          {% set referenz = 119.0 %} {# Sensor-Messflaeche bis Tankboden #}
+          {% set hoehe = referenz - abstand %}
+          {% set punkte = [
+            [0.0,0], [4.5,25], [8.5,50], [12.5,75],
+            [16.0,100], [23.0,150], [30.0,200], [37.0,250],
+            [44.0,300], [58.0,400], [71.0,500], [84.0,600],
+            [91.0,650], [94.5,675], [98.5,700], [101.5,720]
+          ] %}
+          {% set ergebnis = namespace(liter=0) %}
+          {% for i in range(15) %}
+            {% set a = punkte[i] %}
+            {% set b = punkte[i+1] %}
+            {% if hoehe >= a[0] and hoehe <= b[0] %}
+              {% set ergebnis.liter = a[1] + (hoehe-a[0]) * (b[1]-a[1]) / (b[0]-a[0]) %}
+            {% endif %}
+          {% endfor %}
+          {{ ergebnis.liter | round(1) }}

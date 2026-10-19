@@ -1,0 +1,302 @@
+# Kellersteuerung 2.1.0: optionale, vorsichtige Verbrauchsschaetzung.
+# WICHTIG: Erst nach finaler Tankmontage und verifizierter Kalibrierung aktivieren!
+# Quelle: sensor.keller_tank_gesamt_5min aus keller_sensorzentrale.yaml.
+# Festgelegte Regeln (bei Bedarf nach Erfahrungswerten anpassen):
+#  - Mindestens 4 L Abnahme (Hysterese) bevor Verbrauch aufgebucht wird.
+#  - Mehr als 20 L Abnahme zwischen zwei Auswertungen wird als Messsprung IGNORIERT.
+#  - Eine Zunahme >= 80 L ist Nachtank-Kandidat; zwei aufeinanderfolgende,
+#    zueinander passende Werte (max. 15 L Abweichung) bestaetigen die Befuellung.
+#  - Kein Schätzen bei unavailable, kein Aufsummieren positiver Spruenge.
+#  - Nach langen Ausfaellen/Grossspruengen OFF/ON zum Neu-Referenzieren verwenden.
+#  - Schwellen basieren auf ZWEI gleichen Tanks und sind erst nach Prüfung sinnvoll.
+
+input_boolean:
+  keller_verbrauch_aktiv:
+    name: Oelverbrauchsauswertung aktiviert
+    icon: mdi:chart-timeline-variant
+    # Ohne initial: false bleibt die Entscheidung nach Neustart gespeichert.
+    # Beim ersten Anlegen ist der Schalter aus.
+
+input_number:
+  keller_verbrauch_referenz:
+    name: Keller Verbrauch Referenzbestand
+    min: 0
+    max: 5000
+    step: 0.1
+    mode: box
+    unit_of_measurement: L
+
+  keller_verbrauch_gesamtzaehler:
+    name: Keller Verbrauch kumuliert
+    min: 0
+    max: 10000000
+    step: 0.1
+    mode: box
+    unit_of_measurement: L
+
+  keller_nachtank_kandidat:
+    name: Keller Nachtank Kandidat
+    min: 0
+    max: 5000
+    step: 0.1
+    mode: box
+    unit_of_measurement: L
+
+  keller_nachtank_letzte_menge:
+    name: Keller letzte Nachtankmenge (geschaetzt)
+    min: 0
+    max: 5000
+    step: 0.1
+    mode: box
+    unit_of_measurement: L
+
+  keller_nachtank_anzahl:
+    name: Keller erkannte Tankbefuellungen
+    min: 0
+    max: 10000
+    step: 1
+    mode: box
+
+input_text:
+  keller_verbrauch_diagnose:
+    name: Keller Verbrauch Diagnose
+    max: 200
+
+# Der kumulative Zaehler ist die EINZIGE Quelle fuer Utility Meter;
+# es wird niemals direkt der fallende Tankstand als Zaehler verwendet.
+template:
+  - sensor:
+      - name: Heizoel Verbrauch Gesamt
+        unique_id: keller_heizoel_verbrauch_gesamt_21
+        default_entity_id: sensor.heizoel_verbrauch_gesamt
+        icon: mdi:chart-line
+        state_class: total_increasing
+        unit_of_measurement: L
+        availability: >-
+          {{ is_state('input_boolean.keller_verbrauch_aktiv', 'on')
+             and is_number(states('input_number.keller_verbrauch_gesamtzaehler')) }}
+        state: >-
+          {{ states('input_number.keller_verbrauch_gesamtzaehler') | float(0) | round(1) }}
+
+      - name: Heizoel Bestand Referenz
+        unique_id: keller_heizoel_referenzbestand_21
+        default_entity_id: sensor.heizoel_referenzbestand
+        icon: mdi:barrel
+        unit_of_measurement: L
+        state_class: measurement
+        availability: >-
+          {{ is_state('input_boolean.keller_verbrauch_aktiv', 'on')
+             and is_number(states('input_number.keller_verbrauch_referenz'))
+             and states('input_number.keller_verbrauch_referenz') | float(0) > 0 }}
+        state: "{{ states('input_number.keller_verbrauch_referenz') | float(0) | round(1) }}"
+
+      - name: Heizoel Letzte Tankbefuellung
+        unique_id: keller_heizoel_letzte_tankbefuellung_21
+        default_entity_id: sensor.heizoel_letzte_tankbefuellung
+        unit_of_measurement: L
+        icon: mdi:truck-delivery
+        availability: "{{ is_number(states('input_number.keller_nachtank_letzte_menge')) }}"
+        state: "{{ states('input_number.keller_nachtank_letzte_menge') | float(0) | round(1) }}"
+
+      - name: Heizoel Tankbefuellungen
+        unique_id: keller_heizoel_tankbefuellungen_21
+        default_entity_id: sensor.heizoel_tankbefuellungen
+        icon: mdi:counter
+        state: "{{ states('input_number.keller_nachtank_anzahl') | int(0) }}"
+
+      - name: Heizoel Verbrauch Diagnose
+        unique_id: keller_heizoel_verbrauch_diagnose_21
+        default_entity_id: sensor.heizoel_verbrauch_diagnose
+        icon: mdi:information-outline
+        state: "{{ states('input_text.keller_verbrauch_diagnose') }}"
+
+# Home Assistant verwaltet die Periodenzaehler und behaelt sie ueber
+# Neustarts hinweg. Die erste unvollstaendige Periode ist eingeschraenkt.
+utility_meter:
+  heizoel_verbrauch_heute:
+    source: sensor.heizoel_verbrauch_gesamt
+    cycle: daily
+    unique_id: keller_verbrauch_heute_21
+    periodically_resetting: false
+  heizoel_verbrauch_woche:
+    source: sensor.heizoel_verbrauch_gesamt
+    cycle: weekly
+    unique_id: keller_verbrauch_woche_21
+    periodically_resetting: false
+  heizoel_verbrauch_monat:
+    source: sensor.heizoel_verbrauch_gesamt
+    cycle: monthly
+    unique_id: keller_verbrauch_monat_21
+    periodically_resetting: false
+  heizoel_verbrauch_jahr:
+    source: sensor.heizoel_verbrauch_gesamt
+    cycle: yearly
+    unique_id: keller_verbrauch_jahr_21
+    periodically_resetting: false
+
+# Statistik: 6-h-Median fuer Tankbestand, nicht zur Verbrauchsberechnung.
+sensor:
+  - platform: statistics
+    name: Heizoel Bestand Median 6h
+    unique_id: keller_bestand_median_6h_21
+    entity_id: sensor.keller_tank_gesamt_5min
+    state_characteristic: median
+    max_age:
+      hours: 6
+    sampling_size: 900
+    precision: 1
+
+# Passives Berechnungsverfahren (nur lokale Home-Assistant-Werte, kein Wemos-Flash).
+automation:
+  - id: keller_verbrauchsauswertung_21
+    alias: Kellersteuerung - Oelverbrauch aus Tankbestand
+    description: >-
+      Addiert nur bestaetigte Abnahmen, ignoriert grosse Pegelspruenge,
+      bestaetigt ein Nachtanken ueber zwei passende Messpunkte.
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        minutes: "/5"
+        id: messung
+      - trigger: state
+        entity_id: input_boolean.keller_verbrauch_aktiv
+        to: "on"
+        id: aktivieren
+    conditions:
+      - condition: state
+        entity_id: input_boolean.keller_verbrauch_aktiv
+        state: "on"
+      - condition: template
+        value_template: >-
+          {{ is_number(states('sensor.keller_tank_gesamt_5min'))
+             and states('sensor.keller_tank_gesamt_5min') | float(0) > 0
+             and states('sensor.keller_tank_gesamt_5min') | float(0) <= 1600 }}
+    actions:
+      - variables:
+          aktuell: "{{ states('sensor.keller_tank_gesamt_5min') | float(0) | round(1) }}"
+          referenz: "{{ states('input_number.keller_verbrauch_referenz') | float(0) }}"
+          kandidat: "{{ states('input_number.keller_nachtank_kandidat') | float(0) }}"
+          gesamt: "{{ states('input_number.keller_verbrauch_gesamtzaehler') | float(0) }}"
+          anzahl: "{{ states('input_number.keller_nachtank_anzahl') | int(0) }}"
+      - choose:
+          # Beim ersten Einschalten wird nur ein Startwert gesetzt, kein Verbrauch.
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'aktivieren' or referenz | float(0) < 1 }}"
+            sequence:
+              - action: input_number.set_value
+                target:
+                  entity_id: input_number.keller_verbrauch_referenz
+                data:
+                  value: "{{ aktuell | float(0) }}"
+              - action: input_number.set_value
+                target:
+                  entity_id: input_number.keller_nachtank_kandidat
+                data:
+                  value: 0
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.keller_verbrauch_diagnose
+                data:
+                  value: "Referenz neu gesetzt. Noch kein Verbrauch gebucht."
+
+          # Nachfuellung: mehr als 80 Liter Anstieg und zweiter, stabiler Messwert.
+          - conditions:
+              - condition: template
+                value_template: "{{ aktuell | float(0) - referenz | float(0) >= 80 }}"
+            sequence:
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: >-
+                          {{ kandidat | float(0) > referenz | float(0) + 80
+                             and (aktuell | float(0) - kandidat | float(0)) | abs <= 15 }}
+                    sequence:
+                      - action: input_number.set_value
+                        target:
+                          entity_id: input_number.keller_nachtank_letzte_menge
+                        data:
+                          value: "{{ (aktuell | float(0) - referenz | float(0)) | round(1) }}"
+                      - action: input_number.set_value
+                        target:
+                          entity_id: input_number.keller_nachtank_anzahl
+                        data:
+                          value: "{{ anzahl | int(0) + 1 }}"
+                      - action: input_number.set_value
+                        target:
+                          entity_id: input_number.keller_verbrauch_referenz
+                        data:
+                          value: "{{ aktuell | float(0) }}"
+                      - action: input_number.set_value
+                        target:
+                          entity_id: input_number.keller_nachtank_kandidat
+                        data:
+                          value: 0
+                      - action: input_text.set_value
+                        target:
+                          entity_id: input_text.keller_verbrauch_diagnose
+                        data:
+                          value: >-
+                            Tankbefuellung erkannt (ca. {{ (aktuell | float(0) - referenz | float(0)) | round(1) }} L). Bestand neu referenziert.
+                default:
+                  - action: input_number.set_value
+                    target:
+                      entity_id: input_number.keller_nachtank_kandidat
+                    data:
+                      value: "{{ aktuell | float(0) }}"
+                  - action: input_text.set_value
+                    target:
+                      entity_id: input_text.keller_verbrauch_diagnose
+                    data:
+                      value: "Moegliche Tankbefuellung: warte auf bestaetigenden Messwert."
+
+          # 4 bis 20 Liter Abnahme: kleine Pegelschwankungen werden ausgespart.
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ (referenz | float(0) - aktuell | float(0)) >= 4
+                     and (referenz | float(0) - aktuell | float(0)) <= 20 }}
+            sequence:
+              - action: input_number.set_value
+                target:
+                  entity_id: input_number.keller_verbrauch_gesamtzaehler
+                data:
+                  value: "{{ (gesamt | float(0) + referenz | float(0) - aktuell | float(0)) | round(1) }}"
+              - action: input_number.set_value
+                target:
+                  entity_id: input_number.keller_verbrauch_referenz
+                data:
+                  value: "{{ aktuell | float(0) }}"
+              - action: input_number.set_value
+                target:
+                  entity_id: input_number.keller_nachtank_kandidat
+                data:
+                  value: 0
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.keller_verbrauch_diagnose
+                data:
+                  value: "Kleine, bestaetigte Abnahme als Verbrauch uebernommen."
+
+          # Keine plausiblen Abnahmen aufbuchen, wenn der Tankwert springt.
+          - conditions:
+              - condition: template
+                value_template: "{{ referenz | float(0) - aktuell | float(0) > 20 }}"
+            sequence:
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.keller_verbrauch_diagnose
+                data:
+                  value: >-
+                    Groesserer Pegelsprung (>20 L) ignoriert. Kalibrierung pruefen und ggf. AUS/EIN zum Neu-Referenzieren.
+        default:
+          - action: input_number.set_value
+            target:
+              entity_id: input_number.keller_nachtank_kandidat
+            data:
+              value: 0
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.keller_verbrauch_diagnose
+            data:
+              value: "Bereit: zu wenig Aenderung fuer neue Verbrauchsbuchung."

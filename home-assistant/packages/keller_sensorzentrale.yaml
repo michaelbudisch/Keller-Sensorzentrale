@@ -1,0 +1,58 @@
+# Home Assistant Package Keller Sensorzentrale (v2.0)
+# Entitäts-IDs der MQTT Discovery bei Bedarf anpassen.
+# Der Wemos übernimmt die vorhandene 16-Punkte-Tabellenkalibrierung.
+# Home Assistant berechnet die 5-Minuten-Glättung und daraus den Gesamtbestand.
+
+sensor:
+  - platform: filter
+    name: Keller Tank einzeln 5min
+    unique_id: keller_tank_einzeln_5min
+    entity_id: sensor.heizungskeller_sensoren_tank_einzeln
+    filters:
+      - filter: outlier
+        window_size: 5
+        radius: 20.0
+      - filter: time_simple_moving_average
+        window_size: "00:05"
+        precision: 1
+
+  - platform: filter
+    name: Keller Tank Abstand 5min
+    unique_id: keller_tank_abstand_5min
+    entity_id: sensor.heizungskeller_sensoren_abstand_geglattet
+    filters:
+      - filter: outlier
+        window_size: 5
+        radius: 15.0
+      - filter: time_simple_moving_average
+        window_size: "00:05"
+        precision: 1
+
+template:
+  - sensor:
+      - name: Keller Tank Gesamt 5min
+        unique_id: keller_tank_gesamt_5min
+        default_entity_id: sensor.keller_tank_gesamt_5min
+        icon: mdi:barrel
+        unit_of_measurement: L
+        state_class: measurement
+        availability: >-
+          {{ has_value('sensor.keller_tank_einzeln_5min')
+             and has_value('sensor.heizungskeller_sensoren_tank_einzeln')
+             and has_value('sensor.heizungskeller_sensoren_tankanzahl') }}
+        state: >-
+          {{ ((states('sensor.keller_tank_einzeln_5min') | float(0))
+            * (states('sensor.heizungskeller_sensoren_tankanzahl') | float(0))) | round(1) }}
+
+      - name: Keller Tank Füllstand 5min
+        unique_id: keller_tank_fuellstand_5min
+        default_entity_id: sensor.keller_tank_fuellstand_5min
+        icon: mdi:gauge
+        unit_of_measurement: '%'
+        state_class: measurement
+        availability: >-
+          {{ has_value('sensor.keller_tank_einzeln_5min')
+             and has_value('sensor.heizungskeller_sensoren_tank_einzeln') }}
+        state: >-
+          {# Wert 720 L gilt nur fuer deine aktuell 2x 720-L-Tanks. #}
+          {{ (100 * (states('sensor.keller_tank_einzeln_5min') | float(0)) / 720) | round(1) }}

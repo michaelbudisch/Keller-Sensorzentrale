@@ -1,0 +1,38 @@
+# In einem Home Assistant Lovelace-Dashboard als manuelle Karte einfuegen:
+# Ressource muss zuvor registriert sein:
+# /local/heizoel-monitor-card.js   Typ: JavaScript-Modul
+
+type: custom:heizoel-monitor-card
+title: Kellersteuerung
+show_graph: true
+show_temperatures: true
+days: 1
+entities:
+  total: sensor.keller_tank_gesamt_5min
+  single: sensor.keller_tank_einzeln_5min
+  percent: sensor.keller_tank_fuellstand_5min
+  distance: sensor.keller_tank_abstand_5min
+  rawDistance: sensor.heizungskeller_sensoren_abstand_geglattet
+  # Entitaeten anhand deiner Screenshots vom 19.10.2026 bestaetigt:
+  temp1: sensor.heizungskeller_sensoren_slot_1
+  temp2: sensor.heizungskeller_sensoren_slot_2
+  temp3: sensor.heizungskeller_sensoren_slot_3
+  temp4: sensor.heizungskeller_sensoren_slot_4
+  temp5: sensor.heizungskeller_sensoren_slot_5
+  temp6: sensor.heizungskeller_sensoren_slot_6
+  relay1: switch.heizungskeller_sensoren_relais_1
+  relay2: switch.heizungskeller_sensoren_relais_2
+  wifi: sensor.heizungskeller_sensoren_wlan_signal
+  tankCount: sensor.heizungskeller_sensoren_tankanzahl
+  low: binary_sensor.heizungskeller_sensoren_fullstand_niedrig
+  fault: binary_sensor.heizungskeller_sensoren_sensorstorung
+
+  # Verbrauchs-Auswertung (nach Aktivierung in HA):
+  daily: sensor.heizoel_verbrauch_heute
+  weekly: sensor.heizoel_verbrauch_woche
+  monthly: sensor.heizoel_verbrauch_monat
+  yearly: sensor.heizoel_verbrauch_jahr
+  lastFill: sensor.heizoel_letzte_tankbefuellung
+  fillCount: sensor.heizoel_tankbefuellungen
+  verbrauchStatus: sensor.heizoel_verbrauch_diagnose
+  verbrauchAktiv: input_boolean.keller_verbrauch_aktiv
