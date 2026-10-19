@@ -6,6 +6,14 @@ Eine modulare Sensorzentrale für den Heizungskeller: Das kleine Board sammelt M
 
 > **Projektstatus: erprobter Prototyp, kein zertifiziertes Fertigprodukt.** Die Wemos-Firmware v1.9.6 und das Home-Assistant-Paket v2.1.0 wurden aus dem tatsächlich verwendeten Entwicklungsstand übernommen. Es gibt keinen vollständigen reproduzierbaren Hardware-, Kompilier- oder HA-Integrationstest für diesen GitHub-Export. Beim ersten Nachbau Pins und Spannungen messen.
 
+## Projektbilder – Gehäuse, Montage und Dashboard
+
+| Gehäuse mit Elektronik | Fertig montiert | Home Assistant |
+|:---:|:---:|:---:|
+| [![Innenaufbau](docs/galerie/01-innenaufbau.jpg)](docs/galerie/README.md) | [![Montiertes Gehäuse](docs/galerie/07-montiert.jpg)](docs/galerie/README.md) | [![Kellersteuerung](docs/galerie/10-home-assistant.jpg)](docs/galerie/README.md) |
+
+**[→ Vollständige Bildergalerie](docs/galerie/README.md)** · **[→ MakerWorld-Beschreibung (DE/EN)](enclosure/MAKERWORLD-TEXT.md)** · Die 3MF-/STL-Modelle werden später separat auf MakerWorld veröffentlicht.
+
 ## Funktionen
 
 - **Ultraschall-Füllstand:** automatischer Impulsmodus des verwendeten SR04M-2-Setups, Datenleitung an D6 (ECHO/TX), kurzer Median aus sieben Pulsen

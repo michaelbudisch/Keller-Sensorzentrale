@@ -1,5 +1,13 @@
 # Changelog
 
+## GitHub-Projektpaket 0.1.2 — 2026-10-19
+
+- Elf eigene, auf GitHub für die Dokumentation verkleinerte Fotos/Screenshots ergänzt; EXIF-Metadaten entfernt.
+- Bildergalerie mit Gehäuse, Rohrhalterung, Einbau, Sensorkappe, CAD und Home Assistant eingefügt.
+- MakerWorld-Veröffentlichungstexte in Deutsch und Englisch vorbereitet; noch keine Modelldateien.
+- Firmware und Home-Assistant-Integration unverändert.
+
+
 ## GitHub-Projektpaket 0.1.1 — 2026-10-19
 
 - Öffentliches GitHub-Projekt mit vorbereiteter MIT-Lizenz, Beitragshinweisen und Sicherheitsmeldungen.
