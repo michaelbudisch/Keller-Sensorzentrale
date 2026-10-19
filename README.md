@@ -12,7 +12,7 @@ Eine modulare Sensorzentrale für den Heizungskeller: Das kleine Board sammelt M
 |:---:|:---:|:---:|
 | [![Innenaufbau](docs/galerie/01-innenaufbau.jpg)](docs/galerie/README.md) | [![Montiertes Gehäuse](docs/galerie/07-montiert.jpg)](docs/galerie/README.md) | [![Kellersteuerung](docs/galerie/10-home-assistant.jpg)](docs/galerie/README.md) |
 
-**[→ Vollständige Bildergalerie](docs/galerie/README.md)** · **[→ MakerWorld-Beschreibung (DE/EN)](enclosure/MAKERWORLD-TEXT.md)** · Die 3MF-/STL-Modelle werden später separat auf MakerWorld veröffentlicht.
+**[→ 3D-Druck-Gehäuse auf MakerWorld](https://makerworld.com/en/models/3464324-wemos-d1-gehause-fur-ds18b20-und-relais#profileId-3953596)** · **[→ Vollständige Bildergalerie](docs/galerie/README.md)** · **[→ Gehäusedokumentation](enclosure/README.md)** · Die Modelldateien und das Druckprofil werden über MakerWorld angeboten, nicht im GitHub-Repository.
 
 ## Funktionen
 

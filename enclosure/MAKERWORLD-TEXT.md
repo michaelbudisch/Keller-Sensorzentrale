@@ -1,6 +1,6 @@
 # MakerWorld – Veröffentlichungstexte für Keller Sensorzentrale
 
-> Vor der Veröffentlichung: eigene 3MF/STL-Dateien hochladen, Druckprofil testen, Maße und Lizenz wählen, MakerWorld-URL später im GitHub-Projekt ergänzen. Die hier genannten Eigenschaften stammen aus den Fotos des Prototyps; es werden keine unbestätigten Abmessungen oder Druckprofile angegeben.
+> Das Gehäuse ist inzwischen auf [MakerWorld](https://makerworld.com/en/models/3464324-wemos-d1-gehause-fur-ds18b20-und-relais#profileId-3953596) veröffentlicht. Diese deutsch- und englischsprachigen Texte bleiben als Projektbeschreibung und Dokumentationsvorlage erhalten. Maßangaben oder Druckparameter sind der jeweiligen Modellseite zu entnehmen, nicht dieser Datei.
 
 ## Deutsch
 

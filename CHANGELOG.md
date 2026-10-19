@@ -1,5 +1,12 @@
 # Changelog
 
+## GitHub-Projektpaket 0.1.3 — 2026-10-19
+
+- Das veröffentlichte 3D-Druck-Gehäuse mit MakerWorld-Modell und Druckprofil in den deutschen und englischen Projektdokumenten verlinkt.
+- Veraltete „bald verfügbar“-Hinweise zum Gehäuse aktualisiert.
+- Firmware v1.9.6 und Home Assistant v2.1.0 unverändert.
+
+
 ## GitHub-Projektpaket 0.1.2 — 2026-10-19
 
 - Elf eigene, auf GitHub für die Dokumentation verkleinerte Fotos/Screenshots ergänzt; EXIF-Metadaten entfernt.

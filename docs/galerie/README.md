@@ -31,7 +31,7 @@ Fotos des aufgebauten Prototyps und Screenshots der beiden Oberflächen. Die Bil
 *Der vorhandene Tankaufbau: **kein** universeller Montageplan und keine Aussage über Tankabdichtung oder Zulassung.*
 
 ![CAD-Innenansicht](09-cad-innenansicht.jpg)
-*CAD-Ansicht mit Haltestrukturen. Modelldateien erscheinen separat auf MakerWorld.*
+*CAD-Ansicht mit Haltestrukturen. [3D-Druck-Modell auf MakerWorld](https://makerworld.com/en/models/3464324-wemos-d1-gehause-fur-ds18b20-und-relais#profileId-3953596).*
 
 ## Software
 
