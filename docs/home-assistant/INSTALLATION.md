@@ -1,6 +1,6 @@
 # Home Assistant – Installation und Update
 
-**Basis:** Wemos v1.9.6 + Home-Assistant-Packages/Seitenpanel v2.1.0 + Lovelace-Karte v2.1.1. Die Dateinamen `heizoel-monitor-card.js` und `heizoel_dashboard_panel` sind aus Bestandskompatibilität bewusst erhalten; sichtbarer Titel „Kellersteuerung“.
+**Basis:** Wemos v1.9.6 + Home-Assistant-Packages v2.1.0 + Seitenpanel v2.2.0 + Lovelace-Karte v2.1.1. Die Dateinamen `heizoel-monitor-card.js` und `heizoel_dashboard_panel` sind aus Bestandskompatibilität bewusst erhalten; sichtbarer Titel „Kellersteuerung“.
 
 ## 1. Backup
 
@@ -47,6 +47,27 @@ Die **Lovelace-Karte** `custom:heizoel-monitor-card` ist nicht dasselbe wie das 
 ## 4. YAML prüfen und Neustart
 
 HA-Konfigurationsprüfung ausführen, danach Home Assistant vollständig neu starten. Die Custom-Card wird unter `/local/heizoel-monitor-card.js` eingebunden. Panel bleibt unter `/heizoel-monitor` erreichbar. Browsercache bei alten JS-Ständen leeren.
+
+## Heizkreis-Anzeige im Seitenpanel v2.2.0
+
+Im Seitenleistenpanel `/heizoel-monitor` werden nun **Heizung Vorlauf** (Slot 1), **Heizung Rücklauf** (Slot 2) und **Spreizung = Vorlauf − Rücklauf** (K) angezeigt. Ein eigenes Heizkreis-Diagramm verwendet zwei Skalen: links Temperaturen (°C), rechts die Spreizung (K). Zeiträume: 24 h, 7 Tage, 30 Tage. Die normalen sechs Slots und der bisherige Verlauf bleiben sichtbar.
+
+**Zuordnung:** Im Panel-Reiter **Einstellungen** kannst du „Heizkreis Vorlauf“ und „Heizkreis Rücklauf“ auf beliebige zwei verschiedene Temperatur-Entitäten legen. Ein zusätzlicher Verlaufssensor `sensor.heizung_spreizung` ist optional. Falls er fehlt oder noch keine Recorder-Historie hat, schätzt das Diagramm die Differenz aus den beiden vorhandenen Temperatur-Zeitreihen; bei fehlenden oder auseinanderliegenden Daten zeigt es keine erfundenen Werte. Der **aktuelle** Differenzwert wird direkt aus den beiden gültigen Live-Temperaturen berechnet und benötigt keinen Helfer.
+
+**Globale Zuordnung** (im **bereits bestehenden** `heizoel_dashboard_panel:`-Block unter `configuration.yaml`, nicht doppelt anlegen):
+
+```yaml
+heizoel_dashboard_panel:
+  sidebar_title: Kellersteuerung
+  sidebar_icon: mdi:home-thermometer
+  url_path: heizoel-monitor
+  entities:
+    flow: sensor.heizungskeller_sensoren_slot_1
+    return: sensor.heizungskeller_sensoren_slot_2
+    spread: sensor.heizung_spreizung  # optional, wenn Helfer vorhanden
+```
+
+**Upgrade ohne Wemos-Flash:** Backup des Ordners `/config/custom_components/heizoel_dashboard_panel/` erstellen. Aus GitHub den vollständigen Ordner `home-assistant/custom_components/heizoel_dashboard_panel/` übernehmen (`__init__.py`, `manifest.json`, `frontend/heizoel-panel.js`). HA-Konfiguration prüfen, Home Assistant vollständig neu starten und Browser mit **Strg+F5** neu laden. Die Registrierung lädt das neue JavaScript mit `?v=2_2_0`, damit der alte Browsercache nicht weiter verwendet wird. Die Lovelace-Karte ist davon unabhängig.
 
 ## 5. Status und Verbrauch
 

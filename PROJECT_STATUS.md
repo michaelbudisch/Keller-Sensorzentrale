@@ -1,6 +1,6 @@
 # Projektstatus – Keller Sensorzentrale
 
-**Stand:** 19.10.2026 · **GitHub-Dokumentationsstand:** v0.1.5 · **Status:** im eigenen Aufbau erprobter Prototyp, kein zertifiziertes Fertigprodukt.
+**Stand:** 20.10.2026 · **GitHub-Dokumentationsstand:** v0.1.6 · **Status:** im eigenen Aufbau erprobter Prototyp, kein zertifiziertes Fertigprodukt.
 
 > **Startpunkt für neue Chats und Beiträge:** Vor Änderungen diese Datei und die jeweils aktuellen GitHub-Quelldateien lesen. Der Code im Branch `main` ist die öffentliche Quellbasis; die genaue Konfiguration des bereits installierten Geräts kann davon abweichen. Für Live-Einstellungen und Probleme stets aktuelle Screenshots, Diagnosedaten oder Konfigurationsauszüge heranziehen. Keine Passwörter oder privaten Zugangsdaten ins Repository übernehmen.
 
@@ -11,10 +11,10 @@ Ein Wemos D1 mini (ESP8266) liest einen Ultraschall-Tanksensor und bis zu sechs 
 | Bereich | Öffentlicher Stand | Praxiserfahrung / Grenzen |
 | --- | --- | --- |
 | ESP8266-Firmware | **v1.9.6 (HA-Lite / Statusfix)** | Eingebauter Wemos übermittelt Tankwerte und MQTT-Status; GitHub-Sketch ist eine von Zugangsdaten bereinigte Vorlage, kein binär identisches Abbild des laufenden Geräts. |
-| Home Assistant | **HA-Pakete/Seitenpanel v2.1.0, Lovelace-Karte v2.1.1** | Tankabstand, geglättete Liter und Gesamtbestand erschienen in HA; Schalten der Relais über MQTT/HA wurde beobachtet. |
+| Home Assistant | **HA-Pakete v2.1.0, Seitenpanel v2.2.0, Lovelace-Karte v2.1.1** | Tankabstand, geglättete Liter und Gesamtbestand erschienen in HA; Schalten der Relais über MQTT/HA wurde beobachtet. |
 | Tankmessung | **Aktiv, ein Sensor** | Bei der letzten Rückmeldung funktionierten Distanzmessung und Literanzeige. Beide mechanischen Tankuhren zeigten ungefähr den gleichen Stand; exakte Messtoleranz nicht bestimmt. |
 | Tankhochrechnung | **Zwei gleichartige Tanks** | Gemessen wird ein Tank; der zweite wird aus gleichem angenommenem Füllstand hochgerechnet. Im HA-Package ist die aktuelle Einzelkapazität **720 L** für den Prozentwert fest hinterlegt; bei anderen Tanks anpassen. |
-| Temperaturslots | **Sechs Buchsen/Slots vorgesehen** | Auf der Platine verdrahtet, aber zur letzten Rückmeldung waren **keine angeschlossenen DS18B20-Messwerte** bestätigt. Anzeige und Verlauf daher noch leer. |
+| Temperaturslots | **Sechs Buchsen/Slots vorgesehen** | **Zwei angeschlossene DS18B20 an D1 erkannt.** Slot 1 ist als Heizungsvorlauf und Slot 2 als Rücklauf montiert; Screenshot: 37,3 °C und 33,6 °C (3,7 K Spreizung). D2/D5 und Recorder-Verlauf noch nicht getestet. |
 | Relais | **Zwei Kanäle** | Status/Steuerung aus HA möglich, lokale Belastbarkeit, Versorgung und dauerhafter Betrieb noch nicht abschließend qualifiziert. Keine Netzspannung/Sicherheitsfunktionen. |
 | Verbrauchsstatistik | **Optionales HA-Package vorhanden** | Helfer `input_boolean.keller_verbrauch_aktiv` existiert. Die tatsächliche spätere Aktivierung und belastbare Tages-/Wochen-/Monats-/Jahreswerte sind **nicht abschließend bestätigt**. |
 | 3D-Gehäuse | **Veröffentlicht** | [MakerWorld-Modell + Druckprofil](https://makerworld.com/en/models/3464324-wemos-d1-gehause-fur-ds18b20-und-relais#profileId-3953596), [Fotos und Montage](docs/galerie/README.md). Die 3MF/STL-Dateien liegen auf MakerWorld, nicht im GitHub-Repository. |
@@ -47,6 +47,7 @@ Ein Wemos D1 mini (ESP8266) liest einen Ultraschall-Tanksensor und bis zu sechs 
 **Home Assistant:**
 - [Installationsanleitung](docs/home-assistant/INSTALLATION.md) und [Dateien](home-assistant/).
 - Bestehende Namen aus Kompatibilitätsgründen beibehalten: `www/heizoel-monitor-card.js`, `custom_components/heizoel_dashboard_panel`, Panel-Pfad `/heizoel-monitor`; sichtbarer Titel **Kellersteuerung**.
+- Seitenpanel-Update v2.2.0: Vorlauf und Rücklauf standardmäßig aus Slot 1/2, optionaler Spreizungs-Helfer und getrennte Achsen im Verlauf; [Installationsanleitung](docs/home-assistant/INSTALLATION.md#heizkreis-anzeige-im-seitenpanel-v220).
 - Lovelace-Kartenupdate v2.1.1: Eine alte `entity:`-Angabe in Karten-YAML darf `entities.total` nicht überschreiben. Bei alter Karte JS-Datei ersetzen, Ressource `/local/heizoel-monitor-card.js?v=211` nutzen und YAML prüfen; siehe [Installation](docs/home-assistant/INSTALLATION.md#lovelace-karte-alte-anzeige-oder-falscher-gesamtbestand).
 - HA-Packages liegen im Ordner **`packages/` unmittelbar neben der aktiven `configuration.yaml`**. Bei der realen Installation führte ein irrtümliches zusätzliches `config/`-Unterverzeichnis dazu, dass Helfer zunächst fehlten.
 - Bestätigte MQTT-Rohentität: **`sensor.heizungskeller_sensoren_abstand_geglattet`**, ausdrücklich **`geglattet`**, nicht `geglaettet`. Dies war zuvor ein echter Zuordnungsfehler.
@@ -57,7 +58,7 @@ Ein Wemos D1 mini (ESP8266) liest einen Ultraschall-Tanksensor und bis zu sechs 
 
 1. **Webserver-Stabilität:** Historisch war die Weboberfläche zeitweise unerreichbar, während MQTT/HA-Relais weiter funktionierten. Nach HA-Lite ca. **27–29 KB freier Heap** in gezeigten Momentaufnahmen, aber **keine belastbare Langzeit-Entwarnung**. Bei neuen Ausfällen Heap-Minimum, größter Block, Fragmentierung, Neustartursache, Laufzeit sowie WLAN/MQTT erfassen.
 2. **Langzeittest und Zuverlässigkeit:** Keine systematisch dokumentierten Wiederanlauf-, Sensorabbruch-, WiFi/MQTT-Ausfall- und Relaisschalt-Lasttests.
-3. **Temperatur:** Noch reale DS18B20 je Bus anstecken, ROM-Adressen Slots zuordnen, MQTT/HA-Entitäten und Verläufe testen. Für 30-Tage-Grafiken Recorder-Aufbewahrung prüfen.
+3. **Temperatur:** D1 mit zwei erkannten DS18B20 bestätigt. D2/D5 und Recorder-Verlauf sowie neue Heizkreis-Grafik im laufenden HA testen. Für 30-Tage-Grafiken Recorder-Aufbewahrung prüfen.
 4. **Tankkalibrierung:** Gegen die mechanischen Uhren plausibilisiert, aber Verbrauchsschwellwerte, Toleranzen und Tankgleichlauf über Zeit sowie Füllstand bei verschiedenen Pegeln noch zu prüfen.
 5. **Firmware-Build:** Die öffentliche v1.9.6-Vorlage wurde beim Projekt-Export **nicht als vollständiger reproduzierbarer ESP8266-Build bzw. Hardware-Test** verifiziert. Die drei persönlichen Zugangsdaten gehören niemals in Git.
 6. **Schaltplan:** Der GitHub-Plan ist eine elektrische Prinzipskizze, kein fertig geprüfter PCB-/Gerber-Entwurf. Steckerausrichtung, Pegel, 3,3-V-Tauglichkeit und Stromversorgung bei einem Nachbau erneut prüfen.
@@ -65,7 +66,9 @@ Ein Wemos D1 mini (ESP8266) liest einen Ultraschall-Tanksensor und bis zu sechs 
 
 ## 5. Aufgabenliste (nächste sinnvolle Arbeiten)
 
-- [ ] Temperaturfühler anschließen, ROM-Zuordnung und Verlauf mit echtem Messverlauf prüfen.
+- [x] Zwei DS18B20 an D1 erkannt; Slot 1 am Vorlauf, Slot 2 am Rücklauf montiert.
+- [ ] Neues Heizkreis-Panel v2.2.0 im laufenden Home Assistant installieren, aktuelle Spreizung und Verlauf kontrollieren.
+- [ ] DS18B20 an D2/D5 ergänzen und Temperaturhistorie prüfen.
 - [ ] Webserver- und MQTT-Stabilität mehrere Tage beobachten, Diagnose erfassen und ggf. HTTP/Heap gezielt optimieren.
 - [ ] Reproduzierbare Arduino-Buildumgebung mit exakten Bibliotheksversionen und Compile-Test einrichten.
 - [ ] Home-Assistant-Verbrauchslogik mit echten Messreihen validieren, Nachtank-Erkennung testen und ggf. dokumentierte Referenzierung ergänzen.

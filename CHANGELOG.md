@@ -1,5 +1,14 @@
 # Changelog
 
+## GitHub-Projektpaket 0.1.6 — 2026-10-20
+
+- Home-Assistant-Seitenpanel **v2.2.0** zeigt Vorlauf, Rücklauf und Spreizung (Kelvin) mit frei wählbaren Sensor-Entitäten.
+- Gemeinsamer Heizkreisverlauf mit linker °C- und rechter K-Achse und 24-h-/7-/30-Tage-Zeiträumen; bisheriger Sechs-Slot-Verlauf bleibt erhalten.
+- Verwendet optional einen bestehenden HA-Spreizungs-Helfer, sonst zeitlich abgeglichene Recorder-Werte der Temperaturfühler; keine neuen HA-Packages nötig.
+- Python-Registrierung und Manifest auf v2.2.0, mit neuer Cache-Busting-URL; Anleitung und Projektstatus ergänzt.
+- Keine Änderung an Wemos v1.9.6, HA-Packages v2.1.0 oder Lovelace-Karte v2.1.1.
+
+
 ## GitHub-Projektpaket 0.1.5 — 2026-10-19
 
 - **Lovelace-Karte v2.1.1**: Eine alte Karten-YAML-Angabe `entity:` kann nicht mehr die aktuelle Zuordnung `entities.total` überschreiben; Altwert nur noch als Fallback, wenn kein moderner Gesamtbestandssensor vorhanden ist.

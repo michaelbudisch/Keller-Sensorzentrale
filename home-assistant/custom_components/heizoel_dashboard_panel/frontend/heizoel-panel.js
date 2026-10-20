@@ -1,5 +1,5 @@
 /* Keller Sensorzentrale UI engine v1.0.0 — no external dependencies */
-const HM_VERSION = '2.1.0';
+const HM_VERSION = '2.2.0';
 const HM_FIELDS = [
  ['total','Gesamtbestand (5 Min)','sensor','keller_tank_gesamt_5min|gesamtbestand.*(gesch|geschätzt)|estimated_total_liters'],
  ['single','Einzeltank (5 Min)','sensor','keller_tank_einzeln_5min|tank_einzeln|tank einzeln|tank_liters'],
@@ -16,6 +16,9 @@ const HM_FIELDS = [
  ['temp4','Slot 4','sensor','(^|[_ ])slot[_ ]?4$|temp_4$'],
  ['temp5','Slot 5','sensor','(^|[_ ])slot[_ ]?5$|temp_5$'],
  ['temp6','Slot 6','sensor','(^|[_ ])slot[_ ]?6$|temp_6$'],
+ ['flow','Heizkreis Vorlauf','sensor','vorlauf'],
+ ['return','Heizkreis Rücklauf','sensor','ruecklauf|r.cklauf'],
+ ['spread','Heizkreis Spreizung (optional)','sensor','heizung_spreizung|temperaturspreizung'],
  ['relay1','Relais 1','switch','relais[_ ]?1$|relay_1$'],
  ['relay2','Relais 2','switch','relais[_ ]?2$|relay_2$'],
  ['daily','Verbrauch heute','sensor','heizoel_verbrauch_heute|heizöl verbrauch heute'],
@@ -50,6 +53,9 @@ const HM_DEFAULTS={
  temp4:'sensor.heizungskeller_sensoren_slot_4',
  temp5:'sensor.heizungskeller_sensoren_slot_5',
  temp6:'sensor.heizungskeller_sensoren_slot_6',
+ flow:'sensor.heizungskeller_sensoren_slot_1',
+ return:'sensor.heizungskeller_sensoren_slot_2',
+ spread:'sensor.heizung_spreizung',
  relay1:'switch.heizungskeller_sensoren_relais_1',
  relay2:'switch.heizungskeller_sensoren_relais_2',
 };
@@ -189,7 +195,7 @@ function hmAnalysis(hass,map){
  <div class="hm-note">Die Schätzung wertet alle fünf Minuten den geglätteten Gesamtbestand aus. Änderungen unter 4 L werden als Hysterese zurückgehalten; Abnahmen über 20 L je Auswertung werden nicht automatisch als Verbrauch gebucht. Ein möglicher Tankanstieg ab 80 L braucht eine zweite passende Messung. Nach einer Unterbrechung oder Kalibrieränderung kann eine manuelle Neu-Referenzierung erforderlich sein. Keine Abrechnungs- oder Eichmessung.</div></div>`;
 }
 function hmSensors(hass,map){const fault=hmBinary(hass,map,'fault'),low=hmBinary(hass,map,'low');return `<div class="hm-mini three" style="margin:0">${hmStateTile(hass,map,'distance','Tankabstand · 5 Min','cm')}${hmStateTile(hass,map,'wifi','WLAN-Pegel','dBm',0)}${hmStateTile(hass,map,'tankCount','Anzahl Tanks','',0)}${hmTile('Sensor',''+(fault===true?'Störung':fault===false?'OK':'Unbekannt'))}${hmTile('Niedrigstand',low===true?'Warnung':low===false?'OK':'Unbekannt')}${hmStateTile(hass,map,'ref','Referenzbestand','L')}</div>`;}
-function hmSettings(hass,map,config,mode){const states=hass?.states||{}, keys=Object.keys(states).filter(x=>/^(sensor|binary_sensor|input_number|input_boolean|switch)\./.test(x)).sort();const options=(selected,domain)=>`<option value="">Automatisch erkennen</option>${keys.filter(k=>k.startsWith(domain+'.')).map(k=>`<option value="${hmEscape(k)}" ${k===selected?'selected':''}>${hmEscape(states[k]?.attributes?.friendly_name||k)} — ${hmEscape(k)}</option>`).join('')}`;const fields=HM_FIELDS.filter(([key])=>mode==='card'?['total','single','percent','daily','weekly','monthly','range','fault','low'].includes(key):true);return `<section class="hm-panel"><h2>Entitäten zuordnen</h2><div class="hm-small" style="margin-bottom:13px">Automatische Erkennung funktioniert anhand der Entitätsnamen. Die Auswahl hier gilt nur für diesen Browser. Globale Einstellungen können in der Panel-Konfiguration vorgenommen werden.</div><div class="hm-settings">${fields.map(([key,label,domain])=>`<div class="hm-field"><label for="hm-field-${key}">${hmEscape(label)}</label><select id="hm-field-${key}" data-entity="${key}">${options(config[key]||'',domain)}</select></div>`).join('')}</div><div class="hm-toolbar"><button class="hm-btn" data-action="save-settings">Einstellungen speichern</button><button class="hm-btn secondary" data-action="reset-settings">Auto-Erkennung</button></div></section>`;}
+function hmSettings(hass,map,config,mode){const states=hass?.states||{}, keys=Object.keys(states).filter(x=>/^(sensor|binary_sensor|input_number|input_boolean|switch)\./.test(x)).sort();const options=(selected,domain)=>`<option value="">Automatisch erkennen</option>${keys.filter(k=>k.startsWith(domain+'.')).map(k=>`<option value="${hmEscape(k)}" ${k===selected?'selected':''}>${hmEscape(states[k]?.attributes?.friendly_name||k)} — ${hmEscape(k)}</option>`).join('')}`;const fields=HM_FIELDS.filter(([key])=>mode==='card'?['total','single','percent','daily','weekly','monthly','range','fault','low'].includes(key):true);return `<section class="hm-panel"><h2>Entitäten zuordnen</h2><div class="hm-small" style="margin-bottom:13px">Automatische Erkennung funktioniert anhand der Entitätsnamen. Die Zuordnung gilt nur für diesen Browser. Standard: Slot 1 = Vorlauf, Slot 2 = Rücklauf. Die Messstellen kannst du hier ändern; ein eigener Spreizungs-Helfer ist optional. Globale Einstellungen lassen sich in der Panel-Konfiguration vorgeben.</div><div class="hm-settings">${fields.map(([key,label,domain])=>`<div class="hm-field"><label for="hm-field-${key}">${hmEscape(label)}</label><select id="hm-field-${key}" data-entity="${key}">${options(config[key]||'',domain)}</select></div>`).join('')}</div><div class="hm-toolbar"><button class="hm-btn" data-action="save-settings">Einstellungen speichern</button><button class="hm-btn secondary" data-action="reset-settings">Auto-Erkennung</button></div></section>`;}
 function hmFooterVersion(){return `<div class="hm-footer">Keller Sensorzentrale v${HM_VERSION} · Keine Cloud, keine zusätzlichen Bibliotheken · Messwerte stammen aus Home Assistant</div>`;}
 
 
@@ -228,18 +234,79 @@ async function ksRelayClick(component,button){
  catch(err){component._relayError='Relais '+relay+': Schalten fehlgeschlagen. '+String(err?.message||'Berechtigung/Verbindung prüfen').slice(0,130);}
  finally{component._relayBusy=false;component._schedule(true);}
 }
+
+function ksHeatTiles(hass,map){
+ const a=hmValue(hass,map,'flow'),b=hmValue(hass,map,'return');
+ const difference=map.flow!==map.return&&Number.isFinite(a)&&Number.isFinite(b)?a-b:null;
+ return '<div class="hm-mini three" style="margin-top:0">'+
+   hmTile('Heizung Vorlauf',hmFmt(a,1),'°C')+hmTile('Heizung Rücklauf',hmFmt(b,1),'°C')+
+   hmTile('Spreizung (Vorlauf − Rücklauf)',hmFmt(difference,1),'K')+
+   '</div><p class="hm-small" style="margin-top:10px">Standard: Slot 1 = Vorlauf, Slot 2 = Rücklauf. Unter Einstellungen frei änderbar.</p>';
+}
+function ksHeatSection(hass,map,days,graph){
+ return '<div class="hm-section hm-panel"><div class="hm-charthead"><h2>Heizkreis · Vorlauf, Rücklauf & Spreizung</h2>'+ksTimeNav(days)+'</div>'+
+    ksHeatTiles(hass,map)+'<div id="ks-heating-history" style="margin-top:15px">'+
+    (graph||'<div class="hm-empty">Heizkreisverlauf wird geladen …</div>')+'</div></div>';
+}
+function ksDeltaHistory(flow,ret){
+ // Asynchrone Recorder-Änderungen zeitlich zusammenführen; keine Paarung
+ // von Quellen, deren letzte bestätigte Werte mehr als 2 Stunden auseinanderliegen.
+ const points=[...flow.map(p=>({...p,side:0})),...ret.map(p=>({...p,side:1}))]
+   .filter(p=>Number.isFinite(p.v)&&Number.isFinite(p.t)).sort((a,b)=>a.t-b.t);
+ const seen=[null,null],out=[];
+ for(const p of points){
+  seen[p.side]=p;
+  if(!seen[0]||!seen[1]||Math.abs(seen[0].t-seen[1].t)>7200000)continue;
+  const v=seen[0].v-seen[1].v;
+  if(out.length&&out[out.length-1].t===p.t)out[out.length-1]={t:p.t,v};
+  else out.push({t:p.t,v});
+ }
+ return hmDownsample(out);
+}
+async function ksHeatHistory(hass,map,days){
+ if(!hmSafeId(map.flow)||!hmSafeId(map.return)||map.flow===map.return||
+   !hass?.states?.[map.flow]||!hass?.states?.[map.return])
+  return '<div class="hm-empty">Bitte Vorlauf und Rücklauf in Einstellungen auf zwei unterschiedliche Temperatur-Entitäten legen.</div>';
+ const delta=map.spread&&hass.states[map.spread]&&map.spread!==map.flow&&map.spread!==map.return?map.spread:null;
+ const [flow,ret,saved]=await Promise.all([
+  hmHistory(hass,map.flow,days),hmHistory(hass,map.return,days),
+  delta?hmHistory(hass,delta,days).catch(()=>[]):Promise.resolve([])
+ ]);
+ return ksMultiSvg([
+  {label:'Vorlauf',color:'#faad4c',points:flow},
+  {label:'Rücklauf',color:'#35b1e2',points:ret},
+  {label:'Spreizung',color:'#c5a1ef',axis:'spread',points:saved.length>=2?saved:ksDeltaHistory(flow,ret)}
+ ]);
+}
+
 function ksTimeNav(days){return `<div class="hm-chartnav">${[1,7,30].map(n=>`<button data-temp-days="${n}" class="${days===n?'active':''}">${n===1?'24 h':n+' Tage'}</button>`).join('')}</div>`;}
 function ksMultiSvg(series){
  const active=series.filter(s=>s.points?.length>=2);
  if(!active.length)return '<div class="hm-empty">Noch kein Temperaturverlauf. Sensoren zuordnen und Recorder aktivieren.</div>';
  const pts=active.flatMap(s=>s.points),start=Math.min(...pts.map(p=>p.t)),end=Math.max(...pts.map(p=>p.t));
- let lo=Math.min(...pts.map(p=>p.v)),hi=Math.max(...pts.map(p=>p.v));const d=Math.max(1,(hi-lo)*.12);lo-=d;hi+=d;
- const w=980,h=265,l=57,r=18,t=18,b=31;
- const px=x=>l+(x-start)/Math.max(1,end-start)*(w-l-r),py=x=>t+(hi-x)/(hi-lo)*(h-t-b);
- const lines=Array.from({length:4},(_,i)=>{const v=lo+(hi-lo)*i/3,y=py(v);return `<line class="hm-gridline" x1="${l}" x2="${w-r}" y1="${y}" y2="${y}"/><text x="${l-8}" y="${y+4}" text-anchor="end">${hmFmt(v,1)}°</text>`;}).join('');
- const dates=[0,.5,1].map(a=>{const dt=start+(end-start)*a;return `<text x="${px(dt).toFixed(1)}" y="${h-8}" text-anchor="middle">${hmDate(dt,end-start<=86400000)}</text>`;}).join('');
- const paths=active.map(s=>`<path d="${s.points.map((p,i)=>(i?'L':'M')+px(p.t).toFixed(1)+' '+py(p.v).toFixed(1)).join(' ')}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`).join('');
- return `<svg class="hm-graph" viewBox="0 0 ${w} ${h}" role="img" aria-label="Temperaturverlauf"><title>Temperaturverlauf</title>${lines}${paths}${dates}</svg><div class="hm-graphkeys">${active.map(s=>`<span><i style="background:${s.color}"></i>${hmEscape(s.label)}</span>`).join('')}</div>`;
+ const tempPts=active.filter(s=>s.axis!=='spread').flatMap(s=>s.points.map(p=>p.v));
+ const diffPts=active.filter(s=>s.axis==='spread').flatMap(s=>s.points.map(p=>p.v));
+ const bounds=arr=>{if(!arr.length)return [0,1];let lo=Math.min(...arr),hi=Math.max(...arr);const pad=Math.max(.6,(hi-lo)*.12);return [lo-pad,hi+pad];};
+ const c=bounds(tempPts),k=bounds(diffPts);
+ const w=980,h=265,l=57,r=diffPts.length?70:18,t=18,b=31;
+ const px=x=>l+(x-start)/Math.max(1,end-start)*(w-l-r);
+ const py=(v,axis)=>{const [lo,hi]=axis==='spread'?k:c;return t+(hi-v)/(hi-lo)*(h-t-b);};
+ const lines=Array.from({length:4},(_,i)=>{const f=i/3,y=t+f*(h-t-b);
+   return '<line class="hm-gridline" x1="'+l+'" x2="'+(w-r)+'" y1="'+y+'" y2="'+y+'"/>'+
+    (tempPts.length?'<text x="'+(l-8)+'" y="'+(y+4)+'" text-anchor="end">'+hmFmt(c[1]-f*(c[1]-c[0]),1)+'°</text>':'')+
+    (diffPts.length?'<text x="'+(w-r+9)+'" y="'+(y+4)+'">'+hmFmt(k[1]-f*(k[1]-k[0]),1)+' K</text>':'');
+ }).join('');
+ const dates=[0,.5,1].map(a=>{const dt=start+(end-start)*a;return '<text x="'+px(dt).toFixed(1)+'" y="'+(h-8)+'" text-anchor="middle">'+hmDate(dt,end-start<=86400000)+'</text>';}).join('');
+ const gap=Math.max(3*3600000,(end-start)*.035);
+ const paths=active.map(s=>{let last=-Infinity;
+  const coords=s.points.filter(p=>Number.isFinite(p.v)&&Number.isFinite(p.t)).map(p=>{
+   const cmd=p.t-last>gap?'M':'L';last=p.t;return cmd+px(p.t).toFixed(1)+' '+py(p.v,s.axis).toFixed(1);
+  }).join(' ');
+  return '<path d="'+coords+'" fill="none" stroke="'+s.color+'" stroke-width="2.5"'+(s.axis==='spread'?' stroke-dasharray="8 5"':'')+' stroke-linejoin="round" stroke-linecap="round"/>';
+ }).join('');
+ return '<svg class="hm-graph" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Temperaturverlauf, bei Heizkreis: °C links und K rechts"><title>Temperaturverlauf</title>'+lines+paths+dates+'</svg>'+
+  '<div class="hm-graphkeys">'+active.map(s=>'<span><i style="background:'+s.color+'"></i>'+hmEscape(s.label)+(s.axis==='spread'?' (K)':' (°C)')+'</span>').join('')+'</div>'+
+  (diffPts.length?'<p class="hm-small">Linke Skala: °C · rechte Skala: Kelvin (K). Gestrichelt: Spreizung.</p>':'');
 }
 async function ksTemperatureHistory(hass,map,days){
  const tasks=Array.from({length:6},(_,i)=>({i,id:map['temp'+(i+1)]})).filter(t=>t.id&&hass?.states?.[t.id]);
@@ -249,13 +316,13 @@ async function ksTemperatureHistory(hass,map,days){
  }));
  return ksMultiSvg(result);
 }
-function ksOverview(hass,map,oilDays,tempDays,oilGraph,tempGraph){
+function ksOverview(hass,map,oilDays,tempDays,oilGraph,tempGraph,heatGraph){
  const info=hmOverview(hass,map,oilDays,oilGraph||'',false);
- return `<div class="hm-section hm-panel"><h2>Relaissteuerung</h2>${ksRelays(hass,map)}</div><div class="hm-section hm-panel"><h2>Temperatursensoren</h2>${ksTemps(hass,map)}</div><div class="hm-section hm-panel"><div class="hm-charthead"><h2>Temperaturverlauf</h2>${ksTimeNav(tempDays)}</div><div id="ks-temperature-history">${tempGraph||'<div class="hm-empty">Temperaturverlauf wird geladen …</div>'}</div></div>${info}`;
+ return `<div class="hm-section hm-panel"><h2>Relaissteuerung</h2>${ksRelays(hass,map)}</div><div class="hm-section hm-panel"><h2>Temperatursensoren</h2>${ksTemps(hass,map)}</div>${ksHeatSection(hass,map,tempDays,heatGraph)}<div class="hm-section hm-panel"><div class="hm-charthead"><h2>Temperaturverlauf · alle Slots</h2>${ksTimeNav(tempDays)}</div><div id="ks-temperature-history">${tempGraph||'<div class="hm-empty">Temperaturverlauf wird geladen …</div>'}</div></div>${info}`;
 }
 
 class HeizoelMonitorPanel extends HTMLElement {
- constructor(){super();this.attachShadow({mode:'open'});this._tab='overview';this._range=7;this._tempDays=1;this._historyCache=new Map();this._tempCache=new Map();this._historyText='';this._tempText='';this._lastSig='';this._lastRenderAt=0;this._pending=false;this._local={};try{this._local=JSON.parse(localStorage.getItem(HM_SAVE_KEY)||'{}')||{}}catch(_){}}
+ constructor(){super();this.attachShadow({mode:'open'});this._tab='overview';this._range=7;this._tempDays=1;this._historyCache=new Map();this._tempCache=new Map();this._heatCache=new Map();this._historyText='';this._tempText='';this._heatText='';this._lastSig='';this._lastRenderAt=0;this._pending=false;this._local={};try{this._local=JSON.parse(localStorage.getItem(HM_SAVE_KEY)||'{}')||{}}catch(_){}}
  set hass(hass){this._hass=hass;this._schedule();}
  set panel(panel){this._panel=panel;this._schedule(true);}
  set narrow(v){this._narrow=v;}
@@ -269,20 +336,20 @@ class HeizoelMonitorPanel extends HTMLElement {
   if(item.dataset.action==='toggle-menu'){this.dispatchEvent(new Event('hass-toggle-menu',{bubbles:true,composed:true}));return;}
   if(item.dataset.tab){this._tab=item.dataset.tab;this._lastSig='';this._render();return;}
   if(item.dataset.days){this._range=Number(item.dataset.days);this._historyText='';this._lastSig='';this._render();return;}
-  if(item.dataset.tempDays){this._tempDays=Number(item.dataset.tempDays);this._tempText='';this._lastSig='';this._render();return;}
-  if(item.dataset.action==='save-settings'){const next={};for(const select of this.shadowRoot.querySelectorAll('[data-entity]'))if(hmSafeId(select.value))next[select.dataset.entity]=select.value;this._local=next;try{localStorage.setItem(HM_SAVE_KEY,JSON.stringify(next))}catch(_){}this._historyCache.clear();this._tempCache.clear();this._lastSig='';this._tab='overview';this._render();return;}
-  if(item.dataset.action==='reset-settings'){this._local={};try{localStorage.removeItem(HM_SAVE_KEY)}catch(_){}this._historyCache.clear();this._tempCache.clear();this._lastSig='';this._render();return;}
-  if(item.dataset.action==='reload-history'){this._historyCache.clear();this._tempCache.clear();this._fetchOil(true);this._fetchTemp(true);return;}
+  if(item.dataset.tempDays){this._tempDays=Number(item.dataset.tempDays);this._tempText='';this._heatText='';this._lastSig='';this._render();return;}
+  if(item.dataset.action==='save-settings'){const next={};for(const select of this.shadowRoot.querySelectorAll('[data-entity]'))if(hmSafeId(select.value))next[select.dataset.entity]=select.value;this._local=next;try{localStorage.setItem(HM_SAVE_KEY,JSON.stringify(next))}catch(_){}this._historyCache.clear();this._tempCache.clear();this._heatCache.clear();this._heatText='';this._lastSig='';this._tab='overview';this._render();return;}
+  if(item.dataset.action==='reset-settings'){this._local={};try{localStorage.removeItem(HM_SAVE_KEY)}catch(_){}this._historyCache.clear();this._tempCache.clear();this._heatCache.clear();this._heatText='';this._lastSig='';this._render();return;}
+  if(item.dataset.action==='reload-history'){this._historyCache.clear();this._tempCache.clear();this._fetchOil(true);this._fetchTemp(true);this._fetchHeat(true);return;}
  }
  _render(){if(!this._hass||!this.isConnected)return;const map=this._map(),s=hmStatus(this._hass,map),t=this._tab;
   const sections={overview:'Übersicht',temperatures:'Temperaturen',tank:'Tank & Verlauf',analysis:'Verbrauch',settings:'Einstellungen'};
-  let body=t==='overview'?ksOverview(this._hass,map,this._range,this._tempDays,this._historyText,this._tempText):
-   t==='temperatures'?`<div class="hm-panel"><h2>Temperaturen · Slot 1–6</h2>${ksTemps(this._hass,map)}</div><div class="hm-section hm-panel"><div class="hm-charthead"><h2>Temperaturverlauf</h2>${ksTimeNav(this._tempDays)}</div><div id="ks-temperature-history">${this._tempText||'<div class="hm-empty">Lade Verlauf …</div>'}</div></div>`:
+  let body=t==='overview'?ksOverview(this._hass,map,this._range,this._tempDays,this._historyText,this._tempText,this._heatText):
+   t==='temperatures'?`<div class="hm-panel"><h2>Temperaturen · Slot 1–6</h2>${ksTemps(this._hass,map)}</div>${ksHeatSection(this._hass,map,this._tempDays,this._heatText)}<div class="hm-section hm-panel"><div class="hm-charthead"><h2>Temperaturverlauf</h2>${ksTimeNav(this._tempDays)}</div><div id="ks-temperature-history">${this._tempText||'<div class="hm-empty">Lade Verlauf …</div>'}</div></div>`:
    t==='tank'?`<div class="hm-panel">${hmOverview(this._hass,map,this._range,this._historyText)}</div>`:
    t==='analysis'?hmAnalysis(this._hass,map):
    hmSettings(this._hass,map,this._base(),'panel');
   this.shadowRoot.innerHTML=`<style>${HM_STYLES}</style><main class="hm-wrap"><header class="hm-head"><div style="display:flex;align-items:center;gap:12px"><button class="hm-menu" data-action="toggle-menu" aria-label="Home-Assistant-Menü öffnen">☰</button><div><h1>Kellersteuerung</h1><p>Sensoren · Tank · Relais · Verläufe</p></div></div><span class="hm-status ${s.ok?'':'bad'}"><span class="hm-dot"></span>${hmEscape(s.text)}</span></header><nav class="hm-tabs" aria-label="Kellersteuerung Bereiche">${Object.entries(sections).map(([id,name])=>`<button data-tab="${id}" class="${t===id?'active':''}">${name}</button>`).join('')}</nav>${body}${hmFooterVersion()}</main>`;
-  this._lastSig=this._sig();this._lastRenderAt=Date.now();if(t==='overview'||t==='tank')this._fetchOil();if(t==='overview'||t==='temperatures')this._fetchTemp();
+  this._lastSig=this._sig();this._lastRenderAt=Date.now();if(t==='overview'||t==='tank')this._fetchOil();if(t==='overview'||t==='temperatures'){this._fetchTemp();this._fetchHeat();}
  }
  async _fetchOil(force=false){if(!this._hass)return;const id=this._map().total,key=this._range+':'+id,entry=this._historyCache.get(key),node=this.shadowRoot.getElementById('hm-history');if(!node)return;
   if(!force&&entry&&Date.now()-entry.time<300000){this._historyText=entry.html;node.innerHTML=entry.html;return;}if(this._oilLoading===key)return;this._oilLoading=key;
@@ -296,5 +363,22 @@ class HeizoelMonitorPanel extends HTMLElement {
   catch(_){const n=this.shadowRoot.getElementById('ks-temperature-history');if(n)n.innerHTML='<div class="hm-empty hm-error">Temperaturverlauf momentan nicht verfügbar (Recorder prüfen)</div>';}
   finally{if(this._tempLoading===key)this._tempLoading='';}
  }
+ async _fetchHeat(force=false){
+  if(!this._hass)return;
+  const m=this._map(),key=this._tempDays+':'+[m.flow||'',m.return||'',m.spread||''].join(':');
+  const node=this.shadowRoot.getElementById('ks-heating-history'),entry=this._heatCache.get(key);
+  if(!node)return;
+  if(!force&&entry&&Date.now()-entry.time<300000){this._heatText=entry.html;node.innerHTML=entry.html;return;}
+  if(this._heatLoading===key)return;
+  this._heatLoading=key;
+  try{
+   const html=await ksHeatHistory(this._hass,m,this._tempDays);
+   this._heatCache.set(key,{html,time:Date.now()});
+   if(this._heatLoading===key){this._heatText=html;const n=this.shadowRoot.getElementById('ks-heating-history');if(n)n.innerHTML=html;}
+  }catch(_){
+   const n=this.shadowRoot.getElementById('ks-heating-history');if(n)n.innerHTML='<div class="hm-empty hm-error">Heizkreisverlauf nicht verfügbar (Recorder/Zuordnung prüfen).</div>';
+  }finally{if(this._heatLoading===key)this._heatLoading='';}
+ }
+
 }
 if(!customElements.get('heizoel-monitor-panel'))customElements.define('heizoel-monitor-panel',HeizoelMonitorPanel);

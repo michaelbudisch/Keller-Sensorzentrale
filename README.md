@@ -2,7 +2,7 @@
 
 **ESP8266 / Wemos D1 mini · Tankfüllstand · 6 DS18B20-Slots · 2 Relais · MQTT & Home Assistant**
 
-**Softwarestand:** Firmware v1.9.6 · HA-Pakete und Seitenpanel v2.1.0 · **Lovelace-Karte v2.1.1** ([Installationshinweise bei alter Heizölmonitor-Karte](docs/home-assistant/INSTALLATION.md#lovelace-karte-alte-anzeige-oder-falscher-gesamtbestand)).
+**Softwarestand:** Firmware v1.9.6 · HA-Pakete v2.1.0 · **Seitenpanel v2.2.0** · Lovelace-Karte v2.1.1 ([Installationshinweise bei alter Heizölmonitor-Karte](docs/home-assistant/INSTALLATION.md#lovelace-karte-alte-anzeige-oder-falscher-gesamtbestand)).
 
 Eine modulare Sensorzentrale für den Heizungskeller: Das kleine Board sammelt Messwerte und stellt sie per MQTT bereit. Home Assistant übernimmt die Langzeitverläufe, die 5-Minuten-Glättung und die (optional aktivierte) Heizöl-Verbrauchsauswertung.
 
@@ -28,7 +28,7 @@ Die GitHub-Dateien sind die gemeinsame Codebasis für zukünftige Weiterentwickl
 - **Füllstandstabelle:** bis zu 16 Höhen-/Liter-Werte, im Wemos dauerhaft gespeichert; mehrere gleichartige Tanks hochrechenbar
 - **Temperatur:** sechs logische DS18B20-Slots an drei 1-Wire-Bussen; Zuordnung anhand Sensor-ROM-Adresse (jeweils zwei Buchsen pro Bus)
 - **Relais:** zwei digitale Ausgänge D7/D0 mit lokalem Test, optionaler MQTT-Steuerfreigabe und OFF-Vorgabe beim Start
-- **Home Assistant:** MQTT Discovery, sechs Slots, Relais-Entitäten, freie Dashboard-Karte und Seitenpanel „Kellersteuerung“
+- **Home Assistant:** MQTT Discovery, sechs Slots, Relais-Entitäten, Dashboard-Karte und Seitenpanel „Kellersteuerung“ (v2.2.0: Heizkreis-Vorlauf/Rücklauf/Spreizung als Kennzahlen und zweiachsiges Diagramm; beliebige Sensorzuordnung)
 - **HA-Pakete:** 5-Minuten-Glättung, rechnerischer Gesamtbestand, Tankfüllstand und optionale Verbrauchs-/Nachtank-Auswertung
 - **Wartung:** lokales Web-Setup, Status/Diagnose, WLAN, MQTT, OTA/Firmware-Update, frei wählbarer Anzeigename
 

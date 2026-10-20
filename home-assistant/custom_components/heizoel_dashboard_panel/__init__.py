@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 DOMAIN = "heizoel_dashboard_panel"
-VERSION = "2.1.0"
+VERSION = "2.2.0"
 _LOGGER = logging.getLogger(__name__)
 PANEL_URL = "/heizoel-dashboard-assets"
 DEFAULT_PATH = "heizoel-monitor"
