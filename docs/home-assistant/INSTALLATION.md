@@ -1,6 +1,6 @@
 # Home Assistant – Installation und Update
 
-**Basis:** Wemos v1.9.6 + Home-Assistant-Tank-Packages v2.1.0 + Heiztakt-Package v1.0.0 (optional) + Seitenpanel v2.3.0 + Lovelace-Karte v2.1.1. Die Dateinamen `heizoel-monitor-card.js` und `heizoel_dashboard_panel` sind aus Bestandskompatibilität bewusst erhalten; sichtbarer Titel „Kellersteuerung“.
+**Basis:** Wemos v1.9.6 + Home-Assistant-Tank-Packages v2.1.0 + Heiztakt-Package v1.0.1 (optional) + Seitenpanel v2.3.1 + Lovelace-Karte v2.1.1. Die Dateinamen `heizoel-monitor-card.js` und `heizoel_dashboard_panel` sind aus Bestandskompatibilität bewusst erhalten; sichtbarer Titel „Kellersteuerung“.
 
 ## 1. Backup
 
@@ -67,9 +67,9 @@ heizoel_dashboard_panel:
     spread: sensor.heizung_spreizung  # optional, wenn Helfer vorhanden
 ```
 
-**Upgrade ohne Wemos-Flash:** Backup des Ordners `/config/custom_components/heizoel_dashboard_panel/` erstellen. Aus GitHub den vollständigen Ordner `home-assistant/custom_components/heizoel_dashboard_panel/` übernehmen (`__init__.py`, `manifest.json`, `frontend/heizoel-panel.js`). HA-Konfiguration prüfen, Home Assistant vollständig neu starten und Browser mit **Strg+F5** neu laden. Die Registrierung lädt das neue JavaScript mit `?v=2_3_0`, damit der alte Browsercache nicht weiter verwendet wird. Die Lovelace-Karte ist davon unabhängig.
+**Upgrade ohne Wemos-Flash:** Backup des Ordners `/config/custom_components/heizoel_dashboard_panel/` erstellen. Aus GitHub den vollständigen Ordner `home-assistant/custom_components/heizoel_dashboard_panel/` übernehmen (`__init__.py`, `manifest.json`, `frontend/heizoel-panel.js`). HA-Konfiguration prüfen, Home Assistant vollständig neu starten und Browser mit **Strg+F5** neu laden. Die Registrierung lädt das neue JavaScript mit `?v=2_3_1`, damit der alte Browsercache nicht weiter verwendet wird. Die Lovelace-Karte ist davon unabhängig.
 
-## Eigenständiger Bereich „Heizung & Takte“ (Panel v2.3.0)
+## Eigenständiger Bereich „Heizung & Takte“ (Panel v2.3.1)
 
 **Alles für die Heizung ist im neuen Reiter „Heizung & Takte“ gebündelt.** Die Startseite bleibt für allgemeine Sensor-Slots und Relais. „Tank & Verlauf“ und „Ölverbrauch“ enthalten ausschließlich die Heizöldaten. Das generische Temperatur-Slot-Diagramm bleibt im Reiter „Temperatur-Slots“.
 
@@ -80,6 +80,8 @@ Nach einer Konfigurationsprüfung **Home Assistant vollständig neu starten** un
 Der Reiter zeigt: aktueller Zustand, erkannte Starts heute/Woche, Aktivphasen in den letzten 60 Minuten/24 Stunden, Aktiv-/Pausenzeit heute, mittlere/letzte/kürzeste/längste Aktiv- und Pausendauern, 24-h-Mitteltemperaturen sowie Vorlaufmaximum, Rücklaufminimum und höchste Spreizung. Der Verlauf markiert bestätigte Temperatur-Aktivphasen dezent.
 
 **Wichtig:** Die Messung erfolgt anhand der Temperaturspreizung; das ist **kein echter Brennerkontakt**. Die erste Erkennung beginnt bei 8,5 K und endet unter 5,5 K; mindestens 30 s aktiv und 45 s inaktiv. Schwellen und Zeitfilter sind im Package dokumentiert und sollten anhand mehrerer Tage nachvollzogen werden. Ausfälle und fehlende Messwerte werden nicht als gültige Takte nachgezählt.
+
+Die Versionen v1.0.1/v2.3.1 beheben die falsche erste Pausenzeit und leere 24h-Statistikkacheln. Bereits fehlerhafte Pausenwerte können [gezielt korrigiert werden](HEIZTAKTE.md#live-test-korrektur-v101--panel-v231).
 
 Eine genaue Anleitung, Entitätsliste, Grenzen und Kalibrierhinweise enthält **[HEIZTAKTE.md](HEIZTAKTE.md)**. Es sind **keine Firmware- oder Relaisänderungen** erforderlich.
 

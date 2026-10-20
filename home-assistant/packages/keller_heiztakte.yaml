@@ -1,4 +1,4 @@
-# Keller Sensorzentrale – optionale Heiztakt-Auswertung v1.0.0
+# Keller Sensorzentrale – optionale Heiztakt-Auswertung v1.0.1
 # Nur Home Assistant, KEINE Änderung an Wemos, Tankkalibrierung oder Relais.
 # Dies sind erkannte Temperaturzyklen, KEIN gemessener Brenner- oder Pumpenzustand.
 # Ohne Recorder wird die 24h-Historie nicht zuverlässig verfügbar sein.
@@ -12,6 +12,13 @@ input_boolean:
     name: Heizkreis Taktanalyse aktiviert
     icon: mdi:chart-timeline-variant
     # Standard beim ersten Einrichten aus. Bei Einschalten beginnt die neue Erfassung.
+  # Interne Marker: nach jedem Neustart AUS (niemals alte Datumswerte nachzählen).
+  keller_heizkreis_aktivphase_gueltig:
+    name: Heizkreis interne aktive Phase vollständig begonnen
+    initial: false
+  keller_heizkreis_pause_gueltig:
+    name: Heizkreis interne Pause vollständig begonnen
+    initial: false
 
 counter:
   keller_heizkreis_starts_gesamt:
@@ -309,15 +316,31 @@ automation:
         from: "on"
         to: "off"
         id: end
-    conditions:
-      - condition: state
+      - trigger: state
         entity_id: input_boolean.keller_heizkreis_auswertung_aktiv
-        state: "on"
+        to: "on"
+        id: reset
+      - trigger: state
+        entity_id: input_boolean.keller_heizkreis_auswertung_aktiv
+        to: "off"
+        id: reset
     actions:
       - choose:
           - conditions:
               - condition: trigger
+                id: reset
+            sequence:
+              - action: input_boolean.turn_off
+                target:
+                  entity_id:
+                    - input_boolean.keller_heizkreis_aktivphase_gueltig
+                    - input_boolean.keller_heizkreis_pause_gueltig
+          - conditions:
+              - condition: trigger
                 id: start
+              - condition: state
+                entity_id: input_boolean.keller_heizkreis_auswertung_aktiv
+                state: "on"
             sequence:
               - action: counter.increment
                 target:
@@ -327,7 +350,7 @@ automation:
                   pause: "{{ ((as_timestamp(now()) - as_timestamp(states('input_datetime.keller_heizkreis_pause_beginn'), 0)) / 60) | round(1) }}"
               - if:
                   - condition: template
-                    value_template: "{{ 0.5 <= pause | float(0) <= 1440 }}"
+                    value_template: "{{ is_state('input_boolean.keller_heizkreis_pause_gueltig', 'on') and 0.5 <= pause | float(0) <= 1440 }}"
                 then:
                   - action: input_number.set_value
                     target:
@@ -359,16 +382,25 @@ automation:
                   entity_id: input_datetime.keller_heizkreis_beginn
                 data:
                   datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+              - action: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.keller_heizkreis_pause_gueltig
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.keller_heizkreis_aktivphase_gueltig
           - conditions:
               - condition: trigger
                 id: end
+              - condition: state
+                entity_id: input_boolean.keller_heizkreis_auswertung_aktiv
+                state: "on"
             sequence:
 
               - variables:
                   runtime: "{{ ((as_timestamp(now()) - as_timestamp(states('input_datetime.keller_heizkreis_beginn'), 0)) / 60) | round(1) }}"
               - if:
                   - condition: template
-                    value_template: "{{ 0.5 <= runtime | float(0) <= 1440 }}"
+                    value_template: "{{ is_state('input_boolean.keller_heizkreis_aktivphase_gueltig', 'on') and 0.5 <= runtime | float(0) <= 1440 }}"
                 then:
                   - action: input_number.set_value
                     target:
@@ -395,8 +427,19 @@ automation:
                       entity_id: input_number.keller_heizkreis_laufzeit_max
                     data:
                       value: "{{ [states('input_number.keller_heizkreis_laufzeit_max') | float(0), runtime | float(0)] | max }}"
-              - action: input_datetime.set_datetime
+              - if:
+                  - condition: state
+                    entity_id: input_boolean.keller_heizkreis_aktivphase_gueltig
+                    state: "on"
+                then:
+                  - action: input_boolean.turn_on
+                    target:
+                      entity_id: input_boolean.keller_heizkreis_pause_gueltig
+                  - action: input_datetime.set_datetime
+                    target:
+                      entity_id: input_datetime.keller_heizkreis_pause_beginn
+                    data:
+                      datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+              - action: input_boolean.turn_off
                 target:
-                  entity_id: input_datetime.keller_heizkreis_pause_beginn
-                data:
-                  datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+                  entity_id: input_boolean.keller_heizkreis_aktivphase_gueltig

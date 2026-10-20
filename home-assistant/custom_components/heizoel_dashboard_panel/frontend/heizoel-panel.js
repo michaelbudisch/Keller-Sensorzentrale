@@ -1,5 +1,5 @@
 /* Keller Sensorzentrale UI engine v1.0.0 — no external dependencies */
-const HM_VERSION = '2.3.0';
+const HM_VERSION = '2.3.1';
 const HM_FIELDS = [
  ['total','Gesamtbestand (5 Min)','sensor','keller_tank_gesamt_5min|gesamtbestand.*(gesch|geschätzt)|estimated_total_liters'],
  ['single','Einzeltank (5 Min)','sensor','keller_tank_einzeln_5min|tank_einzeln|tank einzeln|tank_liters'],
@@ -205,8 +205,26 @@ const KS_CYCLE_IDS=[
  'sensor.keller_heizkreis_starts_heute','sensor.keller_heizkreis_starts_letzte_stunde',
  'sensor.keller_heizkreis_laufzeit_heute','sensor.keller_heizkreis_pause_heute',
  'sensor.keller_heizkreis_laufzeit_durchschnitt','sensor.keller_heizkreis_pause_durchschnitt',
- 'sensor.keller_heizkreis_taktbewertung'
+ 'sensor.keller_heizkreis_taktbewertung',
+ 'sensor.keller_heizkreis_vorlauf_mittel_24h','sensor.heizkreis_vorlauf_mittel_24h',
+ 'sensor.keller_heizkreis_ruecklauf_mittel_24h','sensor.heizkreis_ruecklauf_mittel_24h',
+ 'sensor.keller_heizkreis_spreizung_mittel_24h','sensor.heizkreis_spreizung_mittel_24h',
+ 'sensor.keller_heizkreis_vorlauf_max_24h','sensor.heizkreis_vorlauf_max_24h',
+ 'sensor.keller_heizkreis_ruecklauf_min_24h','sensor.heizkreis_ruecklauf_min_24h',
+ 'sensor.keller_heizkreis_spreizung_max_24h','sensor.heizkreis_spreizung_max_24h'
 ];
+function ksCycleReading(states,id){
+  // Home Assistant generates the entity_id of a statistics sensor from its
+  // display name, not its unique_id. The six original YAML names lack "Keller".
+  const direct=hmNumber(states[id]?.state);
+  if(direct!==null)return direct;
+  if(id.startsWith('sensor.keller_heizkreis_')){
+   const fromName=id.replace('sensor.keller_heizkreis_','sensor.heizkreis_');
+   const renamed=hmNumber(states[fromName]?.state);
+   if(renamed!==null)return renamed;
+  }
+  return null;
+}
 function ksCyclePanel(hass){
  const states=hass?.states||{},flag=states['input_boolean.keller_heizkreis_auswertung_aktiv'];
  if(!flag)return '<div class="hm-section hm-panel"><h2>Heiztakt-Analyse</h2><div class="hm-note">Optionales Home-Assistant-Package keller_heiztakte.yaml noch nicht installiert. Bitte in den packages-Ordner legen und Home Assistant neu starten.</div></div>';
@@ -234,7 +252,7 @@ function ksCyclePanel(hass){
   ['Rücklauf Minimum · 24 h','sensor.keller_heizkreis_ruecklauf_min_24h','°C',1],
   ['Spreizung Maximum · 24 h','sensor.keller_heizkreis_spreizung_max_24h','K',1]
  ];
- const list=stats.map(([title,id,u,places])=>hmTile(title,hmFmt(hmNumber(states[id]?.state),places),u)).join('');
+ const list=stats.map(([title,id,u,places])=>hmTile(title,hmFmt(ksCycleReading(states,id),places),u)).join('');
  const rating=states['sensor.keller_heizkreis_taktbewertung']?.state||'–';
  return '<div class="hm-section hm-panel"><div class="hm-charthead"><h2>Heiztakt-Analyse</h2><button class="hm-btn secondary" data-cycle-action="'+(enabled?'off':'on')+'">'+(enabled?'Auswertung pausieren':'Auswertung aktivieren')+'</button></div>'+
   '<p class="hm-small"><b>'+hmEscape(phase)+'</b> · Einschätzung: '+hmEscape(enabled?rating:'nicht aktiv')+'</p>'+

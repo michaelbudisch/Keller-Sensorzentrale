@@ -1,5 +1,12 @@
 # Changelog
 
+## GitHub-Projektpaket 0.1.8 — 2026-10-20
+
+- Heiztakt-Package **v1.0.1**: erste, unbestätigte Pause nicht mehr aus altem Zeitstempel berechnen; Gültigkeitsmarker werden bei Neustart und Umschalten zurückgesetzt, vorhandene Statistiken bleiben erhalten.
+- Seitenpanel **v2.3.1**: Statistik-Entitäten mit und ohne `keller_`-Präfix erkennen und Anzeige bei neuen 24h-Werten aktualisieren.
+- Dokumentation zur gezielten Entfernung eines zuvor gespeicherten falschen Pausenwerts ergänzt; Firmware und Ölauswertung unverändert.
+
+
 ## GitHub-Projektpaket 0.1.7 — 2026-10-20
 
 - **Kellersteuerung Seitenpanel v2.3.0:** Ein eigener Reiter **Heizung & Takte** trennt Heizkreis und Taktanalyse von **Tank & Verlauf** und **Ölverbrauch**; Startseite mit allgemeiner Sensor-/Relaisübersicht. Der sechs-Slot-Temperaturbereich bleibt separat.
