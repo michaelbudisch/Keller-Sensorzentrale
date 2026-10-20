@@ -1,6 +1,6 @@
 # Home Assistant – Installation und Update
 
-**Basis:** Wemos v1.9.6 + Home-Assistant-Tank-Packages v2.1.0 + Heiztakt-Package v1.0.1 (optional) + Seitenpanel v2.3.1 + Lovelace-Karte v2.1.1. Die Dateinamen `heizoel-monitor-card.js` und `heizoel_dashboard_panel` sind aus Bestandskompatibilität bewusst erhalten; sichtbarer Titel „Kellersteuerung“.
+**Basis:** Wemos v1.9.6 + Home-Assistant-Tank-Packages v2.1.0 + Heiztakt-Package v1.0.1 (optional) + Seitenpanel v2.3.2 + Lovelace-Karte v2.1.1. Die Dateinamen `heizoel-monitor-card.js` und `heizoel_dashboard_panel` sind aus Bestandskompatibilität bewusst erhalten; sichtbarer Titel „Kellersteuerung“.
 
 ## 1. Backup
 
@@ -48,7 +48,7 @@ Die **Lovelace-Karte** `custom:heizoel-monitor-card` ist nicht dasselbe wie das 
 
 HA-Konfigurationsprüfung ausführen, danach Home Assistant vollständig neu starten. Die Custom-Card wird unter `/local/heizoel-monitor-card.js` eingebunden. Panel bleibt unter `/heizoel-monitor` erreichbar. Browsercache bei alten JS-Ständen leeren.
 
-## Heizkreis-Anzeige im Seitenpanel v2.3.0
+## Heizkreis-Anzeige im Seitenpanel v2.3.2
 
 Im Seitenleistenpanel `/heizoel-monitor` werden nun **Heizung Vorlauf** (Slot 1), **Heizung Rücklauf** (Slot 2) und **Spreizung = Vorlauf − Rücklauf** (K) angezeigt. Ein eigenes Heizkreis-Diagramm verwendet zwei Skalen: links Temperaturen (°C), rechts die Spreizung (K). Zeiträume: 24 h, 7 Tage, 30 Tage. Die normalen sechs Slots und der bisherige Verlauf bleiben sichtbar.
 
@@ -67,9 +67,9 @@ heizoel_dashboard_panel:
     spread: sensor.heizung_spreizung  # optional, wenn Helfer vorhanden
 ```
 
-**Upgrade ohne Wemos-Flash:** Backup des Ordners `/config/custom_components/heizoel_dashboard_panel/` erstellen. Aus GitHub den vollständigen Ordner `home-assistant/custom_components/heizoel_dashboard_panel/` übernehmen (`__init__.py`, `manifest.json`, `frontend/heizoel-panel.js`). HA-Konfiguration prüfen, Home Assistant vollständig neu starten und Browser mit **Strg+F5** neu laden. Die Registrierung lädt das neue JavaScript mit `?v=2_3_1`, damit der alte Browsercache nicht weiter verwendet wird. Die Lovelace-Karte ist davon unabhängig.
+**Upgrade ohne Wemos-Flash:** Backup des Ordners `/config/custom_components/heizoel_dashboard_panel/` erstellen. Aus GitHub den vollständigen Ordner `home-assistant/custom_components/heizoel_dashboard_panel/` übernehmen (`__init__.py`, `manifest.json`, `frontend/heizoel-panel.js`). HA-Konfiguration prüfen, Home Assistant vollständig neu starten und Browser mit **Strg+F5** neu laden. Die Registrierung lädt das neue JavaScript mit `?v=2_3_2`, damit der alte Browsercache nicht weiter verwendet wird. Die Lovelace-Karte ist davon unabhängig.
 
-## Eigenständiger Bereich „Heizung & Takte“ (Panel v2.3.1)
+## Eigenständiger Bereich „Heizung & Takte“ (Panel v2.3.2)
 
 **Alles für die Heizung ist im neuen Reiter „Heizung & Takte“ gebündelt.** Die Startseite bleibt für allgemeine Sensor-Slots und Relais. „Tank & Verlauf“ und „Ölverbrauch“ enthalten ausschließlich die Heizöldaten. Das generische Temperatur-Slot-Diagramm bleibt im Reiter „Temperatur-Slots“.
 
@@ -81,7 +81,7 @@ Der Reiter zeigt: aktueller Zustand, erkannte Starts heute/Woche, Aktivphasen in
 
 **Wichtig:** Die Messung erfolgt anhand der Temperaturspreizung; das ist **kein echter Brennerkontakt**. Die erste Erkennung beginnt bei 8,5 K und endet unter 5,5 K; mindestens 30 s aktiv und 45 s inaktiv. Schwellen und Zeitfilter sind im Package dokumentiert und sollten anhand mehrerer Tage nachvollzogen werden. Ausfälle und fehlende Messwerte werden nicht als gültige Takte nachgezählt.
 
-Die Versionen v1.0.1/v2.3.1 beheben die falsche erste Pausenzeit und leere 24h-Statistikkacheln. Bereits fehlerhafte Pausenwerte können [gezielt korrigiert werden](HEIZTAKTE.md#live-test-korrektur-v101--panel-v231).
+Package v1.0.1 verhindert die falsche erste Pausenzeit. Das Panel v2.3.2 unterstützt die bestätigten Statistik-IDs mit `rucklauf`, `maximum` und `minimum` und gruppiert die Anzeige. Bereits fehlerhafte Pausenwerte können [gezielt korrigiert werden](HEIZTAKTE.md#live-test-korrektur-v101--panel-v231).
 
 Eine genaue Anleitung, Entitätsliste, Grenzen und Kalibrierhinweise enthält **[HEIZTAKTE.md](HEIZTAKTE.md)**. Es sind **keine Firmware- oder Relaisänderungen** erforderlich.
 

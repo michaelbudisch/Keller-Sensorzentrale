@@ -1,5 +1,5 @@
 /* Keller Sensorzentrale UI engine v1.0.0 — no external dependencies */
-const HM_VERSION = '2.3.1';
+const HM_VERSION = '2.3.2';
 const HM_FIELDS = [
  ['total','Gesamtbestand (5 Min)','sensor','keller_tank_gesamt_5min|gesamtbestand.*(gesch|geschätzt)|estimated_total_liters'],
  ['single','Einzeltank (5 Min)','sensor','keller_tank_einzeln_5min|tank_einzeln|tank einzeln|tank_liters'],
@@ -73,6 +73,7 @@ const HM_STYLES = `
 .hm-split{display:flex;justify-content:space-between;gap:12px;margin-top:18px;align-items:center}.hm-split strong{font-size:15px;font-variant-numeric:tabular-nums}.hm-bar{height:11px;border-radius:99px;overflow:hidden;background:rgba(128,149,175,.24);margin:18px 0 8px}.hm-bar>div{height:100%;background:linear-gradient(90deg,#238eaa,#3ab9a4);border-radius:99px;transition:width .35s}
 .hm-meter{display:grid;grid-template-columns:125px 1fr;gap:20px;align-items:center}.hm-ring{width:125px;height:125px;border-radius:50%;display:grid;place-items:center;position:relative;background:conic-gradient(#36b8a9 var(--pct,0%),rgba(148,163,184,.18) 0)}.hm-ring:before{content:'';position:absolute;inset:12px;border-radius:50%;background:var(--hm-bg)}.hm-ring span{position:relative;font-size:22px;font-weight:780;font-variant-numeric:tabular-nums}
 .hm-small{font-size:12px;color:var(--hm-muted);line-height:1.55}.hm-mini{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-top:15px}.hm-mini.three{grid-template-columns:repeat(3,minmax(0,1fr))}.hm-tile{background:var(--hm-bg);border:1px solid var(--hm-line);padding:17px;border-radius:14px;min-width:0}.hm-tile .n{font-size:25px;font-weight:750;margin-top:8px;line-height:1.15;font-variant-numeric:tabular-nums}.hm-tile .u{font-size:12px;color:var(--hm-muted);font-weight:500}.hm-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px}.hm-row b{font-size:14px;font-variant-numeric:tabular-nums}
+.hm-cycle-group{margin-top:22px}.hm-cycle-group h3{margin:0 0 5px;font-size:15px;font-weight:740}.hm-cycle-group>.hm-small{margin:0 0 12px;line-height:1.5}.hm-cycle-group+.hm-cycle-group{border-top:1px solid var(--hm-line);padding-top:20px}
 .hm-section{margin-top:17px}.hm-note{background:rgba(56,166,220,.08);border:1px solid rgba(56,166,220,.22);border-radius:12px;padding:12px 15px;color:var(--hm-muted);font-size:12px;line-height:1.6;margin-top:15px}
 .hm-charthead{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px}.hm-charthead h2{margin:0}.hm-chartnav{display:flex;gap:4px;padding:4px;background:var(--hm-sub);border-radius:10px}.hm-chartnav button{padding:6px 10px;border:none;border-radius:7px;background:transparent;color:inherit;font-size:12px;font-weight:650}.hm-chartnav button.active{background:var(--hm-bg);box-shadow:0 1px 4px rgba(0,0,0,.14)}
 .hm-graph{width:100%;height:auto;display:block;min-height:170px}.hm-graph text{fill:var(--hm-muted);font:12px system-ui,sans-serif}.hm-gridline{stroke:var(--hm-line);stroke-width:1}.hm-area{fill:rgba(55,169,206,.12)}.hm-line{stroke:var(--hm-accent);stroke-width:2.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
@@ -200,65 +201,98 @@ function hmFooterVersion(){return `<div class="hm-footer">Keller Sensorzentrale 
 
 
 
+// Alias list matches Home Assistant entity_ids created from each statistics
+// sensor's display name. unique_id in YAML does NOT set entity_id.
+const KS_STAT_ALIASES={
+ 'sensor.keller_heizkreis_vorlauf_mittel_24h':[
+  'sensor.heizkreis_vorlauf_mittel_24h'
+ ],
+ 'sensor.keller_heizkreis_ruecklauf_mittel_24h':[
+  'sensor.heizkreis_rucklauf_mittel_24h',
+  'sensor.heizkreis_ruecklauf_mittel_24h'
+ ],
+ 'sensor.keller_heizkreis_spreizung_mittel_24h':[
+  'sensor.heizkreis_spreizung_mittel_24h'
+ ],
+ 'sensor.keller_heizkreis_vorlauf_max_24h':[
+  'sensor.heizkreis_vorlauf_maximum_24h',
+  'sensor.heizkreis_vorlauf_max_24h'
+ ],
+ 'sensor.keller_heizkreis_ruecklauf_min_24h':[
+  'sensor.heizkreis_rucklauf_minimum_24h',
+  'sensor.heizkreis_ruecklauf_minimum_24h',
+  'sensor.heizkreis_ruecklauf_min_24h'
+ ],
+ 'sensor.keller_heizkreis_spreizung_max_24h':[
+  'sensor.heizkreis_spreizung_maximum_24h',
+  'sensor.heizkreis_spreizung_max_24h'
+ ]
+};
+const KS_CYCLE_GROUPS=[
+ {title:'Taktung',description:'Erkannte Temperatur-Aktivphasen, nicht Brennerstarts.',metrics:[
+  ['Starts heute','sensor.keller_heizkreis_starts_heute','',0],
+  ['Starts letzte 60 min','sensor.keller_heizkreis_starts_letzte_stunde','',0],
+  ['Starts letzte 24 h','sensor.keller_heizkreis_starts_24h','',0],
+  ['Starts diese Woche','sensor.keller_heizkreis_starts_woche','',0]
+ ]},
+ {title:'Lauf- und Pausenzeiten',description:'Zeitangaben sind geschätzte Temperaturphasen. Durchschnitt und Extremwerte gelten seit Beginn der Erfassung.',metrics:[
+  ['Aktivzeit heute','sensor.keller_heizkreis_laufzeit_heute','h',2],
+  ['Pausenzeit heute','sensor.keller_heizkreis_pause_heute','h',2],
+  ['Ø Aktivphase','sensor.keller_heizkreis_laufzeit_durchschnitt','min',1],
+  ['Ø Pause','sensor.keller_heizkreis_pause_durchschnitt','min',1],
+  ['Letzte Aktivphase','input_number.keller_heizkreis_laufzeit_letzte','min',1],
+  ['Letzte Pause','input_number.keller_heizkreis_pause_letzte','min',1],
+  ['Kürzeste Aktivphase','input_number.keller_heizkreis_laufzeit_min','min',1],
+  ['Längste Aktivphase','input_number.keller_heizkreis_laufzeit_max','min',1],
+  ['Kürzeste Pause','input_number.keller_heizkreis_pause_min','min',1],
+  ['Längste Pause','input_number.keller_heizkreis_pause_max','min',1]
+ ]},
+ {title:'Temperaturstatistik · 24 Stunden',description:'Statistische Messwertauswertung aus Home Assistant; bei noch fehlenden Stichproben erscheint ein Strich.',metrics:[
+  ['Ø Vorlauf','sensor.keller_heizkreis_vorlauf_mittel_24h','°C',1],
+  ['Ø Rücklauf','sensor.keller_heizkreis_ruecklauf_mittel_24h','°C',1],
+  ['Ø Spreizung','sensor.keller_heizkreis_spreizung_mittel_24h','K',1],
+  ['Vorlauf Maximum','sensor.keller_heizkreis_vorlauf_max_24h','°C',1],
+  ['Rücklauf Minimum','sensor.keller_heizkreis_ruecklauf_min_24h','°C',1],
+  ['Spreizung Maximum','sensor.keller_heizkreis_spreizung_max_24h','K',1]
+ ]}
+];
 const KS_CYCLE_IDS=[
- 'input_boolean.keller_heizkreis_auswertung_aktiv','binary_sensor.keller_heizkreis_aktiv',
- 'sensor.keller_heizkreis_starts_heute','sensor.keller_heizkreis_starts_letzte_stunde',
- 'sensor.keller_heizkreis_laufzeit_heute','sensor.keller_heizkreis_pause_heute',
- 'sensor.keller_heizkreis_laufzeit_durchschnitt','sensor.keller_heizkreis_pause_durchschnitt',
+ 'input_boolean.keller_heizkreis_auswertung_aktiv',
+ 'binary_sensor.keller_heizkreis_aktiv',
  'sensor.keller_heizkreis_taktbewertung',
- 'sensor.keller_heizkreis_vorlauf_mittel_24h','sensor.heizkreis_vorlauf_mittel_24h',
- 'sensor.keller_heizkreis_ruecklauf_mittel_24h','sensor.heizkreis_ruecklauf_mittel_24h',
- 'sensor.keller_heizkreis_spreizung_mittel_24h','sensor.heizkreis_spreizung_mittel_24h',
- 'sensor.keller_heizkreis_vorlauf_max_24h','sensor.heizkreis_vorlauf_max_24h',
- 'sensor.keller_heizkreis_ruecklauf_min_24h','sensor.heizkreis_ruecklauf_min_24h',
- 'sensor.keller_heizkreis_spreizung_max_24h','sensor.heizkreis_spreizung_max_24h'
+ ...KS_CYCLE_GROUPS.flatMap(group=>group.metrics.flatMap(([label,id])=>[id,...(KS_STAT_ALIASES[id]||[])]))
 ];
 function ksCycleReading(states,id){
-  // Home Assistant generates the entity_id of a statistics sensor from its
-  // display name, not its unique_id. The six original YAML names lack "Keller".
-  const direct=hmNumber(states[id]?.state);
-  if(direct!==null)return direct;
-  if(id.startsWith('sensor.keller_heizkreis_')){
-   const fromName=id.replace('sensor.keller_heizkreis_','sensor.heizkreis_');
-   const renamed=hmNumber(states[fromName]?.state);
-   if(renamed!==null)return renamed;
-  }
-  return null;
+ // Fixed and documented IDs first; no approximate fuzzy matching.
+ // Missing/unavailable sensors remain unavailable.
+ const candidates=[id,...(KS_STAT_ALIASES[id]||[])];
+ if(id.startsWith('sensor.keller_heizkreis_')&&!KS_STAT_ALIASES[id]){
+  candidates.push(id.replace('sensor.keller_heizkreis_','sensor.heizkreis_'));
+ }
+ for(const candidate of candidates){
+  const value=hmNumber(states?.[candidate]?.state);
+  if(value!==null)return value;
+ }
+ return null;
 }
 function ksCyclePanel(hass){
  const states=hass?.states||{},flag=states['input_boolean.keller_heizkreis_auswertung_aktiv'];
  if(!flag)return '<div class="hm-section hm-panel"><h2>Heiztakt-Analyse</h2><div class="hm-note">Optionales Home-Assistant-Package keller_heiztakte.yaml noch nicht installiert. Bitte in den packages-Ordner legen und Home Assistant neu starten.</div></div>';
  const enabled=flag.state==='on',detected=states['binary_sensor.keller_heizkreis_aktiv']?.state;
  const phase=!enabled?'Auswertung deaktiviert':detected==='on'?'Temperatur-Aktivphase':detected==='off'?'Temperatur-Pause':'Noch keine zuverlässige Erkennung';
- const stats=[
-  ['Erkannte Starts heute','sensor.keller_heizkreis_starts_heute','',0],
-  ['Aktivphasen letzte 60 min','sensor.keller_heizkreis_starts_letzte_stunde','',0],
-  ['Aktivphasen letzte 24 h','sensor.keller_heizkreis_starts_24h','',0],
-  ['Erkannte Starts diese Woche','sensor.keller_heizkreis_starts_woche','',0],
-  ['Aktivzeit heute','sensor.keller_heizkreis_laufzeit_heute','h',2],
-  ['Pausenzeit heute','sensor.keller_heizkreis_pause_heute','h',2],
-  ['Ø Aktivphase (seit Beginn)','sensor.keller_heizkreis_laufzeit_durchschnitt','min',1],
-  ['Ø Pause (seit Beginn)','sensor.keller_heizkreis_pause_durchschnitt','min',1],
-  ['Letzte Aktivphase','input_number.keller_heizkreis_laufzeit_letzte','min',1],
-  ['Letzte Pause','input_number.keller_heizkreis_pause_letzte','min',1],
-  ['Kürzeste Aktivphase','input_number.keller_heizkreis_laufzeit_min','min',1],
-  ['Längste Aktivphase','input_number.keller_heizkreis_laufzeit_max','min',1],
-  ['Kürzeste Pause','input_number.keller_heizkreis_pause_min','min',1],
-  ['Längste Pause','input_number.keller_heizkreis_pause_max','min',1],
-  ['Ø Vorlauf · 24 h','sensor.keller_heizkreis_vorlauf_mittel_24h','°C',1],
-  ['Ø Rücklauf · 24 h','sensor.keller_heizkreis_ruecklauf_mittel_24h','°C',1],
-  ['Ø Spreizung · 24 h','sensor.keller_heizkreis_spreizung_mittel_24h','K',1],
-  ['Vorlauf Maximum · 24 h','sensor.keller_heizkreis_vorlauf_max_24h','°C',1],
-  ['Rücklauf Minimum · 24 h','sensor.keller_heizkreis_ruecklauf_min_24h','°C',1],
-  ['Spreizung Maximum · 24 h','sensor.keller_heizkreis_spreizung_max_24h','K',1]
- ];
- const list=stats.map(([title,id,u,places])=>hmTile(title,hmFmt(ksCycleReading(states,id),places),u)).join('');
  const rating=states['sensor.keller_heizkreis_taktbewertung']?.state||'–';
+ const groups=KS_CYCLE_GROUPS.map(group=>{
+  const tiles=group.metrics.map(([title,id,unit,precision])=>hmTile(title,hmFmt(ksCycleReading(states,id),precision),unit)).join('');
+  return '<section class="hm-cycle-group"><h3>'+hmEscape(group.title)+'</h3>'+
+    '<p class="hm-small">'+hmEscape(group.description)+'</p>'+
+    '<div class="hm-mini three">'+tiles+'</div></section>';
+ }).join('');
  return '<div class="hm-section hm-panel"><div class="hm-charthead"><h2>Heiztakt-Analyse</h2><button class="hm-btn secondary" data-cycle-action="'+(enabled?'off':'on')+'">'+(enabled?'Auswertung pausieren':'Auswertung aktivieren')+'</button></div>'+
   '<p class="hm-small"><b>'+hmEscape(phase)+'</b> · Einschätzung: '+hmEscape(enabled?rating:'nicht aktiv')+'</p>'+
-  '<div class="hm-mini three">'+list+'</div>'+
-  '<div class="hm-note" style="margin-top:14px">Abgeleitete Temperaturzyklen, keine exakten Brennerstarts oder Brennerlaufzeiten. Hysterese und Zeitfilter vermeiden viele Messschwankungen. Die Werte entstehen erst nach Aktivierung; Langzeitstatistiken benötigen den HA-Recorder. Durchschnitt/Extremwerte gelten für vollständig erkannte Phasen seit Start der Erfassung.</div></div>';
+  groups+
+  '<div class="hm-note" style="margin-top:14px">Dies sind abgeleitete Temperaturzyklen und keine exakten Brennerstarts oder Brennerlaufzeiten. Werte werden erst ab Aktivierung erfasst. Der Recorder liefert die Verlaufshistorie. Durchschnittswerte vergangener Pausen können noch alte Fehleinträge enthalten; siehe HEIZTAKTE.md zur gezielten Korrektur.</div></div>';
 }
+
 async function ksCycleIntervals(hass,days){
  const id='binary_sensor.keller_heizkreis_aktiv';if(!hass?.states?.[id])return [];
  const end=Date.now(),start=end-days*86400000;

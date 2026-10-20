@@ -2,7 +2,7 @@
 
 **ESP8266 / Wemos D1 mini · Tankfüllstand · 6 DS18B20-Slots · 2 Relais · MQTT & Home Assistant**
 
-**Softwarestand:** Firmware v1.9.6 · HA-Pakete v2.1.0 · **Seitenpanel v2.3.1** · Lovelace-Karte v2.1.1 ([Installationshinweise bei alter Heizölmonitor-Karte](docs/home-assistant/INSTALLATION.md#lovelace-karte-alte-anzeige-oder-falscher-gesamtbestand)).
+**Softwarestand:** Firmware v1.9.6 · HA-Pakete v2.1.0 · **Seitenpanel v2.3.2** · Lovelace-Karte v2.1.1 ([Installationshinweise bei alter Heizölmonitor-Karte](docs/home-assistant/INSTALLATION.md#lovelace-karte-alte-anzeige-oder-falscher-gesamtbestand)).
 
 Eine modulare Sensorzentrale für den Heizungskeller: Das kleine Board sammelt Messwerte und stellt sie per MQTT bereit. Home Assistant übernimmt die Langzeitverläufe, die 5-Minuten-Glättung und die (optional aktivierte) Heizöl-Verbrauchsauswertung.
 

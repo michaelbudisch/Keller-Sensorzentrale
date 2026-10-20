@@ -1,6 +1,6 @@
 # Keller Sensorzentrale — Home Assistant sensor hub
 
-A Wemos D1 mini / ESP8266 DIY sensor hub with **six logical DS18B20 slots (three 1-Wire buses)**, **two optional relay outputs**, an **ultrasonic tank distance input**, MQTT Discovery, a lightweight local setup UI, a custom Home Assistant panel (v2.3.0: separate heating and oil sections, heating-cycle estimation with shaded activity intervals and temperature trend history), and history / fuel usage packages.
+A Wemos D1 mini / ESP8266 DIY sensor hub with **six logical DS18B20 slots (three 1-Wire buses)**, **two optional relay outputs**, an **ultrasonic tank distance input**, MQTT Discovery, a lightweight local setup UI, a custom Home Assistant panel (v2.3.2: separate heating and oil sections, heating-cycle estimation with shaded activity intervals and temperature trend history), and history / fuel usage packages.
 
 The repository is prepared for GitHub as a **prototype**, not a finished or certified product. The matching 3D-printed enclosure has been [published on MakerWorld](https://makerworld.com/en/models/3464324-wemos-d1-gehause-fur-ds18b20-und-relais#profileId-3953596).
 

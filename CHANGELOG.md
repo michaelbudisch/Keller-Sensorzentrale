@@ -1,5 +1,13 @@
 # Changelog
 
+## GitHub-Projektpaket 0.1.9 — 2026-10-20
+
+- **Kellersteuerungs-Panel v2.3.2:** Home-Assistant-Statistik-IDs mit `rucklauf`, `maximum` und `minimum` als feste, geprüfte Varianten berücksichtigt; keine Zuordnung über unscharfe Namen.
+- Heiztakt-Analyse jetzt in drei klar getrennten Bereichen: **Taktung** (4 Kennzahlen), **Lauf- und Pausenzeiten** (10 Kennzahlen) und **Temperaturstatistik · 24 Stunden** (6 Kennzahlen).
+- Anzeige-Updates reagieren auf alle aufgelösten Statistikentitäten. Fehlende Messwerte bleiben als Strich sichtbar. Dokumentation ergänzt um drei tatsächlich bestätigte Entitäts-IDs und den Hinweis auf unvollständige 24-h-Abdeckung.
+- **Keine Änderung am Wemos (v1.9.6), HA-Heiztakt-Package (v1.0.1), Tank- und Ölverbrauchspaketen oder Lovelace-Karte.**
+
+
 ## GitHub-Projektpaket 0.1.8 — 2026-10-20
 
 - Heiztakt-Package **v1.0.1**: erste, unbestätigte Pause nicht mehr aus altem Zeitstempel berechnen; Gültigkeitsmarker werden bei Neustart und Umschalten zurückgesetzt, vorhandene Statistiken bleiben erhalten.

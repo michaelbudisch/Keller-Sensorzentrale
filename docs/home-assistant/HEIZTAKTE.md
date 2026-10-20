@@ -1,6 +1,6 @@
 # Heizkreis – Temperaturbasierte Taktanalyse (Home Assistant)
 
-**Komponente:** `packages/keller_heiztakte.yaml` v1.0.1 · **Seitenpanel:** v2.3.1 · **Firmware:** unverändert v1.9.6.
+**Komponente:** `packages/keller_heiztakte.yaml` v1.0.1 · **Seitenpanel:** v2.3.2 · **Firmware:** unverändert v1.9.6.
 
 ## Warum eine eigene Auswertung?
 
@@ -18,7 +18,7 @@ Die bisherige Kellersteuerung behält ihre Rollen:
 1. Die bestehenden Dateien und Helfer in HA sichern. **Nicht** vorhandene Ölverbrauchszähler löschen, umbenennen oder zurücksetzen.
 2. `home-assistant/packages/keller_heiztakte.yaml` nach **`/config/packages/keller_heiztakte.yaml`** kopieren; `/config` meint das Verzeichnis der tatsächlich aktiven `configuration.yaml`. `homeassistant: packages: !include_dir_named packages` muss bereits eingerichtet sein.
 3. Paneldateien `home-assistant/custom_components/heizoel_dashboard_panel/{__init__.py,manifest.json,frontend/heizoel-panel.js}` nach `/config/custom_components/heizoel_dashboard_panel/` aktualisieren. Das bestehende Panel nicht doppelt registrieren.
-4. **Entwicklerwerkzeuge → YAML → Konfiguration prüfen**, anschließend Home Assistant vollständig neu starten. Panel neu öffnen oder Strg+F5. Im Footer steht v2.3.0; das Python-Modul verwendet Cache-Busting `?v=2_3_1`.
+4. **Entwicklerwerkzeuge → YAML → Konfiguration prüfen**, anschließend Home Assistant vollständig neu starten. Panel neu öffnen oder Strg+F5. Im Footer steht v2.3.2; das Python-Modul verwendet Cache-Busting `?v=2_3_2`.
 5. **Heizung & Takte** öffnen: Im Block Heiztakt-Analyse **„Auswertung aktivieren“** klicken oder `input_boolean.keller_heizkreis_auswertung_aktiv` einschalten. **Ab diesem Zeitpunkt** werden neu erkannte Aktivphasen gezählt; frühere historische Peaks führen nicht zu genauen alten Starts.
 6. Mindestens 24–72 Stunden messen und Schwellwerte / Mindestzeiten mit den Kurven abgleichen, bevor du die Taktbewertung interpretierst.
 
@@ -74,7 +74,26 @@ data:
 
 Das betrifft nur die fünf Pausen-Helfer, **nicht** die Aktivzeit-/Start-Zähler oder die Ölverbrauchsauswertung. Bereits aufgezeichnete Recorder-Verläufe werden nicht gelöscht. Nur zurücksetzen, wenn du die bisherige Pausenstatistik tatsächlich verwerfen willst.
 
-**24h-Sensoren leer:** Die Statistik-Sensoren werden aus ihrem **Namen**, nicht aus ihrer `unique_id`, normalerweise als `sensor.heizkreis_vorlauf_mittel_24h`, `sensor.heizkreis_ruecklauf_mittel_24h` etc. angelegt. Das Panel v2.3.0 suchte fälschlich nur nach `sensor.keller_heizkreis_...`. Ab Panel v2.3.1 werden beide Varianten erkannt. Prüfe bei weiter leeren Feldern in den HA-Entwicklerwerkzeugen unter **Zustände**, ob die tatsächlichen Entitäts-IDs und numerischen Quellwerte existieren; der Recorder muss ebenfalls laufen.
+**24h-Sensoren leer (bis Panel v2.3.1):** Die Statistik-Sensoren werden aus ihrem **Anzeigenamen**, nicht aus ihrer `unique_id`, angelegt. Die bisherigen Versionen erkannten nicht alle Varianten: `ruecklauf` wird zu `rucklauf`, `max` zu `maximum`, `min` zu `minimum`. Panel **v2.3.2** unterstützt sowohl die im Live-Test nachgewiesenen IDs als auch ältere Alias-Varianten. Prüfe bei weiter leeren Feldern in HA unter Entwicklerwerkzeuge → Zustände, ob die numerischen Eingangsdaten ankommen. Der HA-Recorder sollte für längere Zeiträume aktiviert sein.
+
+## Bestätigte Entitäts-IDs und neue Gruppierung (Panel v2.3.2)
+
+Bei der realen Installation wurden am **20.10.2026** diese IDs und Zustände bestätigt:
+
+| HA-Entität | Beobachteter Wert |
+| --- | ---: |
+| `sensor.heizkreis_vorlauf_maximum_24h` | 51,3 °C |
+| `sensor.heizkreis_rucklauf_minimum_24h` | 23,6 °C |
+| `sensor.heizkreis_rucklauf_mittel_24h` | 34,7 °C |
+
+Weitere erwartete (nach YAML-Namen abgeleitete, noch nicht im Screenshot bestätigte) IDs:
+`sensor.heizkreis_vorlauf_mittel_24h`,
+`sensor.heizkreis_spreizung_mittel_24h`,
+`sensor.heizkreis_spreizung_maximum_24h`.
+
+**Panel v2.3.2** kennt die exakt bestätigten IDs und sinnvolle Alternativen und zeigt die Werte in drei Blöcken an: **Taktung** (Starts), **Lauf- und Pausenzeiten**, **Temperaturstatistik (24 Stunden)**. Fehlende/nicht numerische Daten bleiben als Strich sichtbar. Der Rest des Heizkreisverlaufs, der Tank, das Relais und die Ölverbrauchslogik bleiben unverändert.
+
+**Hinweis zum Statistikzeitraum:** Ein `age_coverage_ratio` von beispielsweise 0,2 bedeutet nur rund 20 % Abdeckung des 24-h-Zeitfensters. Es handelt sich dann noch nicht um ein vollständiges Tagesmaximum oder -mittel, auch wenn die Kachel bereits Daten zeigt. Die Werte werden aussagekräftiger, wenn über einen ganzen Tag aufgezeichnet wurde.
 
 ## Test-Checkliste und Troubleshooting
 
