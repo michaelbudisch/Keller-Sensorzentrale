@@ -1,5 +1,13 @@
 # Changelog
 
+## GitHub-Projektpaket 0.1.7 — 2026-10-20
+
+- **Kellersteuerung Seitenpanel v2.3.0:** Ein eigener Reiter **Heizung & Takte** trennt Heizkreis und Taktanalyse von **Tank & Verlauf** und **Ölverbrauch**; Startseite mit allgemeiner Sensor-/Relaisübersicht. Der sechs-Slot-Temperaturbereich bleibt separat.
+- Neues optionales Home-Assistant-Package **`keller_heiztakte.yaml` v1.0.0**: 2-Punkt-Hysterese (über 8,5 K/unter 5,5 K), Entprellung, abgeleiteter Aktivzustand, Starts/Zeiten, zuletzt/Ø/Minimum/Maximum erkannter Zyklen, 24-h-Temperatur- und Spreizungsstatistik sowie vorsichtige Taktbewertung.
+- Markierung erkannter Aktivintervalle in der Heizkreisgrafik; History-Cache für Heizkurven auf 60 s reduziert.
+- Neue HA-Einrichtungs- und Kalibrierdokumentation. Messwerte nur Näherung der Brenneraktivität; keine Änderungen am Wemos, MQTT, den bestehenden Tank-Packages oder der Lovelace-Karte.
+
+
 ## GitHub-Projektpaket 0.1.6 — 2026-10-20
 
 - Home-Assistant-Seitenpanel **v2.2.0** zeigt Vorlauf, Rücklauf und Spreizung (Kelvin) mit frei wählbaren Sensor-Entitäten.

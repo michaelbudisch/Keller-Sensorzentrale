@@ -1,6 +1,6 @@
 # Projektstatus – Keller Sensorzentrale
 
-**Stand:** 20.10.2026 · **GitHub-Dokumentationsstand:** v0.1.6 · **Status:** im eigenen Aufbau erprobter Prototyp, kein zertifiziertes Fertigprodukt.
+**Stand:** 20.10.2026 · **GitHub-Dokumentationsstand:** v0.1.7 · **Status:** im eigenen Aufbau erprobter Prototyp, kein zertifiziertes Fertigprodukt.
 
 > **Startpunkt für neue Chats und Beiträge:** Vor Änderungen diese Datei und die jeweils aktuellen GitHub-Quelldateien lesen. Der Code im Branch `main` ist die öffentliche Quellbasis; die genaue Konfiguration des bereits installierten Geräts kann davon abweichen. Für Live-Einstellungen und Probleme stets aktuelle Screenshots, Diagnosedaten oder Konfigurationsauszüge heranziehen. Keine Passwörter oder privaten Zugangsdaten ins Repository übernehmen.
 
@@ -11,7 +11,7 @@ Ein Wemos D1 mini (ESP8266) liest einen Ultraschall-Tanksensor und bis zu sechs 
 | Bereich | Öffentlicher Stand | Praxiserfahrung / Grenzen |
 | --- | --- | --- |
 | ESP8266-Firmware | **v1.9.6 (HA-Lite / Statusfix)** | Eingebauter Wemos übermittelt Tankwerte und MQTT-Status; GitHub-Sketch ist eine von Zugangsdaten bereinigte Vorlage, kein binär identisches Abbild des laufenden Geräts. |
-| Home Assistant | **HA-Pakete v2.1.0, Seitenpanel v2.2.0, Lovelace-Karte v2.1.1** | Tankabstand, geglättete Liter und Gesamtbestand erschienen in HA; Schalten der Relais über MQTT/HA wurde beobachtet. |
+| Home Assistant | **HA-Pakete v2.1.0, Seitenpanel v2.3.0, Lovelace-Karte v2.1.1** | Tankabstand, geglättete Liter und Gesamtbestand erschienen in HA; Schalten der Relais über MQTT/HA wurde beobachtet. |
 | Tankmessung | **Aktiv, ein Sensor** | Bei der letzten Rückmeldung funktionierten Distanzmessung und Literanzeige. Beide mechanischen Tankuhren zeigten ungefähr den gleichen Stand; exakte Messtoleranz nicht bestimmt. |
 | Tankhochrechnung | **Zwei gleichartige Tanks** | Gemessen wird ein Tank; der zweite wird aus gleichem angenommenem Füllstand hochgerechnet. Im HA-Package ist die aktuelle Einzelkapazität **720 L** für den Prozentwert fest hinterlegt; bei anderen Tanks anpassen. |
 | Temperaturslots | **Sechs Buchsen/Slots vorgesehen** | **Zwei angeschlossene DS18B20 an D1 erkannt.** Slot 1 ist als Heizungsvorlauf und Slot 2 als Rücklauf montiert; Screenshot: 37,3 °C und 33,6 °C (3,7 K Spreizung). D2/D5 und Recorder-Verlauf noch nicht getestet. |
@@ -47,6 +47,7 @@ Ein Wemos D1 mini (ESP8266) liest einen Ultraschall-Tanksensor und bis zu sechs 
 **Home Assistant:**
 - [Installationsanleitung](docs/home-assistant/INSTALLATION.md) und [Dateien](home-assistant/).
 - Bestehende Namen aus Kompatibilitätsgründen beibehalten: `www/heizoel-monitor-card.js`, `custom_components/heizoel_dashboard_panel`, Panel-Pfad `/heizoel-monitor`; sichtbarer Titel **Kellersteuerung**.
+- Seitenpanel-Update v2.3.0: Heizkreis mit Taktanalyse im eigenen Reiter, Ölbereiche getrennt, ein optionales Package (v1.0.0) liefert abgeleitete Aktivphasen und Statistiken. Im realen HA noch zu installieren und über mehrere Tage zu prüfen. [Ausführliche Anleitung](docs/home-assistant/HEIZTAKTE.md).
 - Seitenpanel-Update v2.2.0: Vorlauf und Rücklauf standardmäßig aus Slot 1/2, optionaler Spreizungs-Helfer und getrennte Achsen im Verlauf; [Installationsanleitung](docs/home-assistant/INSTALLATION.md#heizkreis-anzeige-im-seitenpanel-v220).
 - Lovelace-Kartenupdate v2.1.1: Eine alte `entity:`-Angabe in Karten-YAML darf `entities.total` nicht überschreiben. Bei alter Karte JS-Datei ersetzen, Ressource `/local/heizoel-monitor-card.js?v=211` nutzen und YAML prüfen; siehe [Installation](docs/home-assistant/INSTALLATION.md#lovelace-karte-alte-anzeige-oder-falscher-gesamtbestand).
 - HA-Packages liegen im Ordner **`packages/` unmittelbar neben der aktiven `configuration.yaml`**. Bei der realen Installation führte ein irrtümliches zusätzliches `config/`-Unterverzeichnis dazu, dass Helfer zunächst fehlten.
@@ -67,7 +68,8 @@ Ein Wemos D1 mini (ESP8266) liest einen Ultraschall-Tanksensor und bis zu sechs 
 ## 5. Aufgabenliste (nächste sinnvolle Arbeiten)
 
 - [x] Zwei DS18B20 an D1 erkannt; Slot 1 am Vorlauf, Slot 2 am Rücklauf montiert.
-- [ ] Neues Heizkreis-Panel v2.2.0 im laufenden Home Assistant installieren, aktuelle Spreizung und Verlauf kontrollieren.
+- [x] Vorlauf/Rücklauf/Spreizung des Panels v2.2.0 im laufenden Home Assistant mit wiederholten Peaks bestätigt.
+- [ ] Neues Heiztakt-Package v1.0.0 und getrenntes Panel v2.3.0 installieren, Erkennung und Laufzeitstatistik mehrere Tage prüfen.
 - [ ] DS18B20 an D2/D5 ergänzen und Temperaturhistorie prüfen.
 - [ ] Webserver- und MQTT-Stabilität mehrere Tage beobachten, Diagnose erfassen und ggf. HTTP/Heap gezielt optimieren.
 - [ ] Reproduzierbare Arduino-Buildumgebung mit exakten Bibliotheksversionen und Compile-Test einrichten.

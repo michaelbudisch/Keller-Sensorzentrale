@@ -2,7 +2,7 @@
 
 **ESP8266 / Wemos D1 mini · Tankfüllstand · 6 DS18B20-Slots · 2 Relais · MQTT & Home Assistant**
 
-**Softwarestand:** Firmware v1.9.6 · HA-Pakete v2.1.0 · **Seitenpanel v2.2.0** · Lovelace-Karte v2.1.1 ([Installationshinweise bei alter Heizölmonitor-Karte](docs/home-assistant/INSTALLATION.md#lovelace-karte-alte-anzeige-oder-falscher-gesamtbestand)).
+**Softwarestand:** Firmware v1.9.6 · HA-Pakete v2.1.0 · **Seitenpanel v2.3.0** · Lovelace-Karte v2.1.1 ([Installationshinweise bei alter Heizölmonitor-Karte](docs/home-assistant/INSTALLATION.md#lovelace-karte-alte-anzeige-oder-falscher-gesamtbestand)).
 
 Eine modulare Sensorzentrale für den Heizungskeller: Das kleine Board sammelt Messwerte und stellt sie per MQTT bereit. Home Assistant übernimmt die Langzeitverläufe, die 5-Minuten-Glättung und die (optional aktivierte) Heizöl-Verbrauchsauswertung.
 
@@ -22,13 +22,18 @@ Die GitHub-Dateien sind die gemeinsame Codebasis für zukünftige Weiterentwickl
 
 **[→ 3D-Druck-Gehäuse auf MakerWorld](https://makerworld.com/en/models/3464324-wemos-d1-gehause-fur-ds18b20-und-relais#profileId-3953596)** · **[→ Vollständige Bildergalerie](docs/galerie/README.md)** · **[→ Gehäusedokumentation](enclosure/README.md)** · Die Modelldateien und das Druckprofil werden über MakerWorld angeboten, nicht im GitHub-Repository.
 
+
+### Optionale Heiztakt-Auswertung
+
+Das [HA-Package `keller_heiztakte.yaml`](home-assistant/packages/keller_heiztakte.yaml) zählt **aus Temperaturdaten abgeleitete Aktivphasen**. Der eigenständige Reiter **Heizung & Takte** im Panel v2.3.0 zeigt Starts, Aktiv-/Pausenzeit, Mittelwerte, Extremwerte und markierte Phasen. Ein echter Brennerkontakt wird damit **nicht** ersetzt. [Einrichtung und Grenzen](docs/home-assistant/HEIZTAKTE.md). Das Package ist zunächst deaktiviert und muss nach HA-Neustart gezielt aktiviert werden.
+
 ## Funktionen
 
 - **Ultraschall-Füllstand:** automatischer Impulsmodus des verwendeten SR04M-2-Setups, Datenleitung an D6 (ECHO/TX), kurzer Median aus sieben Pulsen
 - **Füllstandstabelle:** bis zu 16 Höhen-/Liter-Werte, im Wemos dauerhaft gespeichert; mehrere gleichartige Tanks hochrechenbar
 - **Temperatur:** sechs logische DS18B20-Slots an drei 1-Wire-Bussen; Zuordnung anhand Sensor-ROM-Adresse (jeweils zwei Buchsen pro Bus)
 - **Relais:** zwei digitale Ausgänge D7/D0 mit lokalem Test, optionaler MQTT-Steuerfreigabe und OFF-Vorgabe beim Start
-- **Home Assistant:** MQTT Discovery, sechs Slots, Relais-Entitäten, Dashboard-Karte und Seitenpanel „Kellersteuerung“ (v2.2.0: Heizkreis-Vorlauf/Rücklauf/Spreizung als Kennzahlen und zweiachsiges Diagramm; beliebige Sensorzuordnung)
+- **Home Assistant:** MQTT Discovery, sechs Slots, Relais-Entitäten, Dashboard-Karte und Seitenpanel „Kellersteuerung“ (v2.3.0: eigener Reiter Heizung & Takte mit Heizkreisdiagramm, markierten Aktivphasen und optionalem Taktstatistik-Package; beliebige Zuordnung für die Heizkreis-Kurven)
 - **HA-Pakete:** 5-Minuten-Glättung, rechnerischer Gesamtbestand, Tankfüllstand und optionale Verbrauchs-/Nachtank-Auswertung
 - **Wartung:** lokales Web-Setup, Status/Diagnose, WLAN, MQTT, OTA/Firmware-Update, frei wählbarer Anzeigename
 

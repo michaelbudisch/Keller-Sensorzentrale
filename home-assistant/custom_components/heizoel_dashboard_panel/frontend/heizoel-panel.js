@@ -1,5 +1,5 @@
 /* Keller Sensorzentrale UI engine v1.0.0 — no external dependencies */
-const HM_VERSION = '2.2.0';
+const HM_VERSION = '2.3.0';
 const HM_FIELDS = [
  ['total','Gesamtbestand (5 Min)','sensor','keller_tank_gesamt_5min|gesamtbestand.*(gesch|geschätzt)|estimated_total_liters'],
  ['single','Einzeltank (5 Min)','sensor','keller_tank_einzeln_5min|tank_einzeln|tank einzeln|tank_liters'],
@@ -199,6 +199,61 @@ function hmSettings(hass,map,config,mode){const states=hass?.states||{}, keys=Ob
 function hmFooterVersion(){return `<div class="hm-footer">Keller Sensorzentrale v${HM_VERSION} · Keine Cloud, keine zusätzlichen Bibliotheken · Messwerte stammen aus Home Assistant</div>`;}
 
 
+
+const KS_CYCLE_IDS=[
+ 'input_boolean.keller_heizkreis_auswertung_aktiv','binary_sensor.keller_heizkreis_aktiv',
+ 'sensor.keller_heizkreis_starts_heute','sensor.keller_heizkreis_starts_letzte_stunde',
+ 'sensor.keller_heizkreis_laufzeit_heute','sensor.keller_heizkreis_pause_heute',
+ 'sensor.keller_heizkreis_laufzeit_durchschnitt','sensor.keller_heizkreis_pause_durchschnitt',
+ 'sensor.keller_heizkreis_taktbewertung'
+];
+function ksCyclePanel(hass){
+ const states=hass?.states||{},flag=states['input_boolean.keller_heizkreis_auswertung_aktiv'];
+ if(!flag)return '<div class="hm-section hm-panel"><h2>Heiztakt-Analyse</h2><div class="hm-note">Optionales Home-Assistant-Package keller_heiztakte.yaml noch nicht installiert. Bitte in den packages-Ordner legen und Home Assistant neu starten.</div></div>';
+ const enabled=flag.state==='on',detected=states['binary_sensor.keller_heizkreis_aktiv']?.state;
+ const phase=!enabled?'Auswertung deaktiviert':detected==='on'?'Temperatur-Aktivphase':detected==='off'?'Temperatur-Pause':'Noch keine zuverlässige Erkennung';
+ const stats=[
+  ['Erkannte Starts heute','sensor.keller_heizkreis_starts_heute','',0],
+  ['Aktivphasen letzte 60 min','sensor.keller_heizkreis_starts_letzte_stunde','',0],
+  ['Aktivphasen letzte 24 h','sensor.keller_heizkreis_starts_24h','',0],
+  ['Erkannte Starts diese Woche','sensor.keller_heizkreis_starts_woche','',0],
+  ['Aktivzeit heute','sensor.keller_heizkreis_laufzeit_heute','h',2],
+  ['Pausenzeit heute','sensor.keller_heizkreis_pause_heute','h',2],
+  ['Ø Aktivphase (seit Beginn)','sensor.keller_heizkreis_laufzeit_durchschnitt','min',1],
+  ['Ø Pause (seit Beginn)','sensor.keller_heizkreis_pause_durchschnitt','min',1],
+  ['Letzte Aktivphase','input_number.keller_heizkreis_laufzeit_letzte','min',1],
+  ['Letzte Pause','input_number.keller_heizkreis_pause_letzte','min',1],
+  ['Kürzeste Aktivphase','input_number.keller_heizkreis_laufzeit_min','min',1],
+  ['Längste Aktivphase','input_number.keller_heizkreis_laufzeit_max','min',1],
+  ['Kürzeste Pause','input_number.keller_heizkreis_pause_min','min',1],
+  ['Längste Pause','input_number.keller_heizkreis_pause_max','min',1],
+  ['Ø Vorlauf · 24 h','sensor.keller_heizkreis_vorlauf_mittel_24h','°C',1],
+  ['Ø Rücklauf · 24 h','sensor.keller_heizkreis_ruecklauf_mittel_24h','°C',1],
+  ['Ø Spreizung · 24 h','sensor.keller_heizkreis_spreizung_mittel_24h','K',1],
+  ['Vorlauf Maximum · 24 h','sensor.keller_heizkreis_vorlauf_max_24h','°C',1],
+  ['Rücklauf Minimum · 24 h','sensor.keller_heizkreis_ruecklauf_min_24h','°C',1],
+  ['Spreizung Maximum · 24 h','sensor.keller_heizkreis_spreizung_max_24h','K',1]
+ ];
+ const list=stats.map(([title,id,u,places])=>hmTile(title,hmFmt(hmNumber(states[id]?.state),places),u)).join('');
+ const rating=states['sensor.keller_heizkreis_taktbewertung']?.state||'–';
+ return '<div class="hm-section hm-panel"><div class="hm-charthead"><h2>Heiztakt-Analyse</h2><button class="hm-btn secondary" data-cycle-action="'+(enabled?'off':'on')+'">'+(enabled?'Auswertung pausieren':'Auswertung aktivieren')+'</button></div>'+
+  '<p class="hm-small"><b>'+hmEscape(phase)+'</b> · Einschätzung: '+hmEscape(enabled?rating:'nicht aktiv')+'</p>'+
+  '<div class="hm-mini three">'+list+'</div>'+
+  '<div class="hm-note" style="margin-top:14px">Abgeleitete Temperaturzyklen, keine exakten Brennerstarts oder Brennerlaufzeiten. Hysterese und Zeitfilter vermeiden viele Messschwankungen. Die Werte entstehen erst nach Aktivierung; Langzeitstatistiken benötigen den HA-Recorder. Durchschnitt/Extremwerte gelten für vollständig erkannte Phasen seit Start der Erfassung.</div></div>';
+}
+async function ksCycleIntervals(hass,days){
+ const id='binary_sensor.keller_heizkreis_aktiv';if(!hass?.states?.[id])return [];
+ const end=Date.now(),start=end-days*86400000;
+ const url='history/period/'+encodeURIComponent(new Date(start).toISOString())+'?filter_entity_id='+encodeURIComponent(id)+'&end_time='+encodeURIComponent(new Date(end).toISOString())+'&minimal_response&no_attributes';
+ const data=await hass.callApi('GET',url);
+ const rows=Array.isArray(data)?(data.find(r=>Array.isArray(r)&&r.some(p=>p.entity_id===id))||data[0]||[]):[];
+ const changes=rows.map(r=>({s:r.state,t:Date.parse(r.last_changed||r.last_updated)})).filter(r=>Number.isFinite(r.t)).sort((a,b)=>a.t-b.t);
+ let opened=null;const out=[];
+ for(const r of changes){if(r.s==='on'&&opened===null)opened=Math.max(start,r.t);else if(r.s!=='on'&&opened!==null){if(r.t>opened)out.push([opened,r.t]);opened=null;}}
+ if(opened!==null)out.push([opened,end]);
+ return out;
+}
+
 const KS_TEMP_COLORS=['#35b1e2','#faad4c','#52c29a','#c5a1ef','#e7768e','#c6dc65'];
 function ksSlotName(hass,id,num){
  const ent=hass?.states?.[id];
@@ -268,19 +323,20 @@ async function ksHeatHistory(hass,map,days){
    !hass?.states?.[map.flow]||!hass?.states?.[map.return])
   return '<div class="hm-empty">Bitte Vorlauf und Rücklauf in Einstellungen auf zwei unterschiedliche Temperatur-Entitäten legen.</div>';
  const delta=map.spread&&hass.states[map.spread]&&map.spread!==map.flow&&map.spread!==map.return?map.spread:null;
- const [flow,ret,saved]=await Promise.all([
+ const [flow,ret,saved,intervals]=await Promise.all([
   hmHistory(hass,map.flow,days),hmHistory(hass,map.return,days),
-  delta?hmHistory(hass,delta,days).catch(()=>[]):Promise.resolve([])
+  delta?hmHistory(hass,delta,days).catch(()=>[]):Promise.resolve([]),
+  ksCycleIntervals(hass,days).catch(()=>[])
  ]);
  return ksMultiSvg([
   {label:'Vorlauf',color:'#faad4c',points:flow},
   {label:'Rücklauf',color:'#35b1e2',points:ret},
   {label:'Spreizung',color:'#c5a1ef',axis:'spread',points:saved.length>=2?saved:ksDeltaHistory(flow,ret)}
- ]);
+ ],intervals);
 }
 
 function ksTimeNav(days){return `<div class="hm-chartnav">${[1,7,30].map(n=>`<button data-temp-days="${n}" class="${days===n?'active':''}">${n===1?'24 h':n+' Tage'}</button>`).join('')}</div>`;}
-function ksMultiSvg(series){
+function ksMultiSvg(series,intervals=[]){
  const active=series.filter(s=>s.points?.length>=2);
  if(!active.length)return '<div class="hm-empty">Noch kein Temperaturverlauf. Sensoren zuordnen und Recorder aktivieren.</div>';
  const pts=active.flatMap(s=>s.points),start=Math.min(...pts.map(p=>p.t)),end=Math.max(...pts.map(p=>p.t));
@@ -298,13 +354,14 @@ function ksMultiSvg(series){
  }).join('');
  const dates=[0,.5,1].map(a=>{const dt=start+(end-start)*a;return '<text x="'+px(dt).toFixed(1)+'" y="'+(h-8)+'" text-anchor="middle">'+hmDate(dt,end-start<=86400000)+'</text>';}).join('');
  const gap=Math.max(3*3600000,(end-start)*.035);
+ const bands=intervals.filter(([a,b])=>b>start&&a<end).map(([a,b])=>{const lft=px(Math.max(a,start)),right=px(Math.min(b,end));return '<rect x="'+lft.toFixed(1)+'" y="'+t+'" width="'+Math.max(0,right-lft).toFixed(1)+'" height="'+(h-t-b)+'" fill="rgba(241,162,67,.10)"/>';}).join('');
  const paths=active.map(s=>{let last=-Infinity;
   const coords=s.points.filter(p=>Number.isFinite(p.v)&&Number.isFinite(p.t)).map(p=>{
    const cmd=p.t-last>gap?'M':'L';last=p.t;return cmd+px(p.t).toFixed(1)+' '+py(p.v,s.axis).toFixed(1);
   }).join(' ');
   return '<path d="'+coords+'" fill="none" stroke="'+s.color+'" stroke-width="2.5"'+(s.axis==='spread'?' stroke-dasharray="8 5"':'')+' stroke-linejoin="round" stroke-linecap="round"/>';
  }).join('');
- return '<svg class="hm-graph" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Temperaturverlauf, bei Heizkreis: °C links und K rechts"><title>Temperaturverlauf</title>'+lines+paths+dates+'</svg>'+
+ return '<svg class="hm-graph" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Temperaturverlauf, bei Heizkreis: °C links und K rechts"><title>Temperaturverlauf</title>'+lines+bands+paths+dates+'</svg>'+
   '<div class="hm-graphkeys">'+active.map(s=>'<span><i style="background:'+s.color+'"></i>'+hmEscape(s.label)+(s.axis==='spread'?' (K)':' (°C)')+'</span>').join('')+'</div>'+
   (diffPts.length?'<p class="hm-small">Linke Skala: °C · rechte Skala: Kelvin (K). Gestrichelt: Spreizung.</p>':'');
 }
@@ -316,10 +373,7 @@ async function ksTemperatureHistory(hass,map,days){
  }));
  return ksMultiSvg(result);
 }
-function ksOverview(hass,map,oilDays,tempDays,oilGraph,tempGraph,heatGraph){
- const info=hmOverview(hass,map,oilDays,oilGraph||'',false);
- return `<div class="hm-section hm-panel"><h2>Relaissteuerung</h2>${ksRelays(hass,map)}</div><div class="hm-section hm-panel"><h2>Temperatursensoren</h2>${ksTemps(hass,map)}</div>${ksHeatSection(hass,map,tempDays,heatGraph)}<div class="hm-section hm-panel"><div class="hm-charthead"><h2>Temperaturverlauf · alle Slots</h2>${ksTimeNav(tempDays)}</div><div id="ks-temperature-history">${tempGraph||'<div class="hm-empty">Temperaturverlauf wird geladen …</div>'}</div></div>${info}`;
-}
+function ksOverview(hass,map){return `<div class="hm-section hm-panel"><h2>Relaissteuerung</h2>${ksRelays(hass,map)}</div><div class="hm-section hm-panel"><h2>Temperatur-Slots · 1–6</h2>${ksTemps(hass,map)}</div><div class="hm-section hm-panel"><h2>Auswertungsbereiche</h2><p class="hm-small">Heizkreis und Taktung sind unter <b>Heizung & Takte</b>. Ölbestand und Ölverbrauch sind getrennt in <b>Tank & Verlauf</b> und <b>Ölverbrauch</b>.</p><div class="hm-toolbar"><button class="hm-btn" data-tab="heating">Heizung & Takte</button><button class="hm-btn secondary" data-tab="tank">Tank & Verlauf</button></div></div>`;}
 
 class HeizoelMonitorPanel extends HTMLElement {
  constructor(){super();this.attachShadow({mode:'open'});this._tab='overview';this._range=7;this._tempDays=1;this._historyCache=new Map();this._tempCache=new Map();this._heatCache=new Map();this._historyText='';this._tempText='';this._heatText='';this._lastSig='';this._lastRenderAt=0;this._pending=false;this._local={};try{this._local=JSON.parse(localStorage.getItem(HM_SAVE_KEY)||'{}')||{}}catch(_){}}
@@ -329,10 +383,11 @@ class HeizoelMonitorPanel extends HTMLElement {
  connectedCallback(){this.shadowRoot.addEventListener('click',(ev)=>this._click(ev));this._schedule(true);}
  _base(){return {...(this._panel?.config?.entities||{}),...this._local};}
  _map(){return hmAutoMap(this._hass,this._base());}
- _sig(){const m=this._map(),h=this._hass;return HM_FIELDS.map(([k])=>m[k]+':'+(h?.states?.[m[k]]?.state||'')).join('|')+'|'+this._tab+'|'+this._range+'|'+this._tempDays;}
+ _sig(){const m=this._map(),h=this._hass;return HM_FIELDS.map(([k])=>m[k]+':'+(h?.states?.[m[k]]?.state||'')).join('|')+'|'+KS_CYCLE_IDS.map(k=>h?.states?.[k]?.state||'').join('|')+'|'+this._tab+'|'+this._range+'|'+this._tempDays;}
  _schedule(force=false){if(!this.isConnected||!this._hass)return;if(this._pending)return;const sig=this._sig();if(!force&&sig===this._lastSig)return;if(!force&&this._tab==='settings')return;if(!force&&Date.now()-this._lastRenderAt<1500)return;this._pending=true;Promise.resolve().then(()=>{this._pending=false;if(this.isConnected)this._render()});}
  _click(ev){const item=ev.target.closest('button');if(!item)return;
   if(item.dataset.relay){ksRelayClick(this,item);return;}
+   if(item.dataset.cycleAction){if(this._hass?.states?.['input_boolean.keller_heizkreis_auswertung_aktiv'])this._hass.callService('input_boolean',item.dataset.cycleAction==='on'?'turn_on':'turn_off',{entity_id:'input_boolean.keller_heizkreis_auswertung_aktiv'}).catch(()=>{});return;}
   if(item.dataset.action==='toggle-menu'){this.dispatchEvent(new Event('hass-toggle-menu',{bubbles:true,composed:true}));return;}
   if(item.dataset.tab){this._tab=item.dataset.tab;this._lastSig='';this._render();return;}
   if(item.dataset.days){this._range=Number(item.dataset.days);this._historyText='';this._lastSig='';this._render();return;}
@@ -342,14 +397,15 @@ class HeizoelMonitorPanel extends HTMLElement {
   if(item.dataset.action==='reload-history'){this._historyCache.clear();this._tempCache.clear();this._fetchOil(true);this._fetchTemp(true);this._fetchHeat(true);return;}
  }
  _render(){if(!this._hass||!this.isConnected)return;const map=this._map(),s=hmStatus(this._hass,map),t=this._tab;
-  const sections={overview:'Übersicht',temperatures:'Temperaturen',tank:'Tank & Verlauf',analysis:'Verbrauch',settings:'Einstellungen'};
-  let body=t==='overview'?ksOverview(this._hass,map,this._range,this._tempDays,this._historyText,this._tempText,this._heatText):
-   t==='temperatures'?`<div class="hm-panel"><h2>Temperaturen · Slot 1–6</h2>${ksTemps(this._hass,map)}</div>${ksHeatSection(this._hass,map,this._tempDays,this._heatText)}<div class="hm-section hm-panel"><div class="hm-charthead"><h2>Temperaturverlauf</h2>${ksTimeNav(this._tempDays)}</div><div id="ks-temperature-history">${this._tempText||'<div class="hm-empty">Lade Verlauf …</div>'}</div></div>`:
+  const sections={overview:'Übersicht',heating:'Heizung & Takte',temperatures:'Temperatur-Slots',tank:'Tank & Verlauf',analysis:'Ölverbrauch',settings:'Einstellungen'};
+  let body=t==='overview'?ksOverview(this._hass,map):
+    t==='heating'?`${ksHeatSection(this._hass,map,this._tempDays,this._heatText)}${ksCyclePanel(this._hass)}`:
+   t==='temperatures'?`<div class="hm-panel"><h2>Temperaturen · Slot 1–6</h2>${ksTemps(this._hass,map)}</div><div class="hm-section hm-panel"><div class="hm-charthead"><h2>Temperaturverlauf</h2>${ksTimeNav(this._tempDays)}</div><div id="ks-temperature-history">${this._tempText||'<div class="hm-empty">Lade Verlauf …</div>'}</div></div>`:
    t==='tank'?`<div class="hm-panel">${hmOverview(this._hass,map,this._range,this._historyText)}</div>`:
    t==='analysis'?hmAnalysis(this._hass,map):
    hmSettings(this._hass,map,this._base(),'panel');
   this.shadowRoot.innerHTML=`<style>${HM_STYLES}</style><main class="hm-wrap"><header class="hm-head"><div style="display:flex;align-items:center;gap:12px"><button class="hm-menu" data-action="toggle-menu" aria-label="Home-Assistant-Menü öffnen">☰</button><div><h1>Kellersteuerung</h1><p>Sensoren · Tank · Relais · Verläufe</p></div></div><span class="hm-status ${s.ok?'':'bad'}"><span class="hm-dot"></span>${hmEscape(s.text)}</span></header><nav class="hm-tabs" aria-label="Kellersteuerung Bereiche">${Object.entries(sections).map(([id,name])=>`<button data-tab="${id}" class="${t===id?'active':''}">${name}</button>`).join('')}</nav>${body}${hmFooterVersion()}</main>`;
-  this._lastSig=this._sig();this._lastRenderAt=Date.now();if(t==='overview'||t==='tank')this._fetchOil();if(t==='overview'||t==='temperatures'){this._fetchTemp();this._fetchHeat();}
+  this._lastSig=this._sig();this._lastRenderAt=Date.now();if(t==='tank')this._fetchOil();if(t==='temperatures')this._fetchTemp();if(t==='heating')this._fetchHeat();
  }
  async _fetchOil(force=false){if(!this._hass)return;const id=this._map().total,key=this._range+':'+id,entry=this._historyCache.get(key),node=this.shadowRoot.getElementById('hm-history');if(!node)return;
   if(!force&&entry&&Date.now()-entry.time<300000){this._historyText=entry.html;node.innerHTML=entry.html;return;}if(this._oilLoading===key)return;this._oilLoading=key;
@@ -368,7 +424,7 @@ class HeizoelMonitorPanel extends HTMLElement {
   const m=this._map(),key=this._tempDays+':'+[m.flow||'',m.return||'',m.spread||''].join(':');
   const node=this.shadowRoot.getElementById('ks-heating-history'),entry=this._heatCache.get(key);
   if(!node)return;
-  if(!force&&entry&&Date.now()-entry.time<300000){this._heatText=entry.html;node.innerHTML=entry.html;return;}
+  if(!force&&entry&&Date.now()-entry.time<60000){this._heatText=entry.html;node.innerHTML=entry.html;return;}
   if(this._heatLoading===key)return;
   this._heatLoading=key;
   try{

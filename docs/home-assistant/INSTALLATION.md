@@ -1,6 +1,6 @@
 # Home Assistant – Installation und Update
 
-**Basis:** Wemos v1.9.6 + Home-Assistant-Packages v2.1.0 + Seitenpanel v2.2.0 + Lovelace-Karte v2.1.1. Die Dateinamen `heizoel-monitor-card.js` und `heizoel_dashboard_panel` sind aus Bestandskompatibilität bewusst erhalten; sichtbarer Titel „Kellersteuerung“.
+**Basis:** Wemos v1.9.6 + Home-Assistant-Tank-Packages v2.1.0 + Heiztakt-Package v1.0.0 (optional) + Seitenpanel v2.3.0 + Lovelace-Karte v2.1.1. Die Dateinamen `heizoel-monitor-card.js` und `heizoel_dashboard_panel` sind aus Bestandskompatibilität bewusst erhalten; sichtbarer Titel „Kellersteuerung“.
 
 ## 1. Backup
 
@@ -48,7 +48,7 @@ Die **Lovelace-Karte** `custom:heizoel-monitor-card` ist nicht dasselbe wie das 
 
 HA-Konfigurationsprüfung ausführen, danach Home Assistant vollständig neu starten. Die Custom-Card wird unter `/local/heizoel-monitor-card.js` eingebunden. Panel bleibt unter `/heizoel-monitor` erreichbar. Browsercache bei alten JS-Ständen leeren.
 
-## Heizkreis-Anzeige im Seitenpanel v2.2.0
+## Heizkreis-Anzeige im Seitenpanel v2.3.0
 
 Im Seitenleistenpanel `/heizoel-monitor` werden nun **Heizung Vorlauf** (Slot 1), **Heizung Rücklauf** (Slot 2) und **Spreizung = Vorlauf − Rücklauf** (K) angezeigt. Ein eigenes Heizkreis-Diagramm verwendet zwei Skalen: links Temperaturen (°C), rechts die Spreizung (K). Zeiträume: 24 h, 7 Tage, 30 Tage. Die normalen sechs Slots und der bisherige Verlauf bleiben sichtbar.
 
@@ -67,7 +67,21 @@ heizoel_dashboard_panel:
     spread: sensor.heizung_spreizung  # optional, wenn Helfer vorhanden
 ```
 
-**Upgrade ohne Wemos-Flash:** Backup des Ordners `/config/custom_components/heizoel_dashboard_panel/` erstellen. Aus GitHub den vollständigen Ordner `home-assistant/custom_components/heizoel_dashboard_panel/` übernehmen (`__init__.py`, `manifest.json`, `frontend/heizoel-panel.js`). HA-Konfiguration prüfen, Home Assistant vollständig neu starten und Browser mit **Strg+F5** neu laden. Die Registrierung lädt das neue JavaScript mit `?v=2_2_0`, damit der alte Browsercache nicht weiter verwendet wird. Die Lovelace-Karte ist davon unabhängig.
+**Upgrade ohne Wemos-Flash:** Backup des Ordners `/config/custom_components/heizoel_dashboard_panel/` erstellen. Aus GitHub den vollständigen Ordner `home-assistant/custom_components/heizoel_dashboard_panel/` übernehmen (`__init__.py`, `manifest.json`, `frontend/heizoel-panel.js`). HA-Konfiguration prüfen, Home Assistant vollständig neu starten und Browser mit **Strg+F5** neu laden. Die Registrierung lädt das neue JavaScript mit `?v=2_3_0`, damit der alte Browsercache nicht weiter verwendet wird. Die Lovelace-Karte ist davon unabhängig.
+
+## Eigenständiger Bereich „Heizung & Takte“ (Panel v2.3.0)
+
+**Alles für die Heizung ist im neuen Reiter „Heizung & Takte“ gebündelt.** Die Startseite bleibt für allgemeine Sensor-Slots und Relais. „Tank & Verlauf“ und „Ölverbrauch“ enthalten ausschließlich die Heizöldaten. Das generische Temperatur-Slot-Diagramm bleibt im Reiter „Temperatur-Slots“.
+
+Zusätzliche Statistikfunktionen erfordern das optionale Paket **`home-assistant/packages/keller_heiztakte.yaml`**. Lege die Datei neben `keller_sensorzentrale.yaml` und `keller_verbrauch.yaml` in den Ordner `packages/` der **aktiven** `configuration.yaml`. Füge keine zweite `homeassistant:`- oder `packages:`-Konfiguration hinzu.
+
+Nach einer Konfigurationsprüfung **Home Assistant vollständig neu starten** und im neuen Heizungsreiter die Schaltfläche **„Auswertung aktivieren“** benutzen (Helfer `input_boolean.keller_heizkreis_auswertung_aktiv`). **Es werden keine alten Starts rückwirkend gezählt.** Die Trendgrafik der Temperaturen funktioniert auch ohne aktivierte Taktanalyse, aber markierte Aktivphasen und die Zähler benötigen das neue Paket.
+
+Der Reiter zeigt: aktueller Zustand, erkannte Starts heute/Woche, Aktivphasen in den letzten 60 Minuten/24 Stunden, Aktiv-/Pausenzeit heute, mittlere/letzte/kürzeste/längste Aktiv- und Pausendauern, 24-h-Mitteltemperaturen sowie Vorlaufmaximum, Rücklaufminimum und höchste Spreizung. Der Verlauf markiert bestätigte Temperatur-Aktivphasen dezent.
+
+**Wichtig:** Die Messung erfolgt anhand der Temperaturspreizung; das ist **kein echter Brennerkontakt**. Die erste Erkennung beginnt bei 8,5 K und endet unter 5,5 K; mindestens 30 s aktiv und 45 s inaktiv. Schwellen und Zeitfilter sind im Package dokumentiert und sollten anhand mehrerer Tage nachvollzogen werden. Ausfälle und fehlende Messwerte werden nicht als gültige Takte nachgezählt.
+
+Eine genaue Anleitung, Entitätsliste, Grenzen und Kalibrierhinweise enthält **[HEIZTAKTE.md](HEIZTAKTE.md)**. Es sind **keine Firmware- oder Relaisänderungen** erforderlich.
 
 ## 5. Status und Verbrauch
 
@@ -87,5 +101,6 @@ heizoel_dashboard_panel:
 | Webseite nicht erreichbar, Relais via HA gehen | Webserver/Heap/WLAN untersuchen; MQTT funktioniert unabhängig vom HTTP-Server |
 | Alle MQTT-Entities `unavailable` | Wemos, Broker, Discovery/Availability-Status kontrollieren |
 | Temperaturlinien leer | DS18B20 vorhanden, ROM zugeordnet, Recorder eingeschaltet, historischer Zeitraum vorhanden? |
+| Heiztakt-Werte fehlen | Neues `keller_heiztakte.yaml`-Package installiert, HA neugestartet, `input_boolean.keller_heizkreis_auswertung_aktiv` eingeschaltet? Quellen Slot 1/2 gültig? |
 
 Für eine 30-Tage-Ansicht muss der Home-Assistant-Recorder auch entsprechend Daten behalten. Die vorhandenen Packages verändern die Recorder-Aufbewahrung nicht automatisch.

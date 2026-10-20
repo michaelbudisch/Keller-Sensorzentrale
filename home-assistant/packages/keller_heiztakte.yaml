@@ -1,0 +1,402 @@
+# Keller Sensorzentrale – optionale Heiztakt-Auswertung v1.0.0
+# Nur Home Assistant, KEINE Änderung an Wemos, Tankkalibrierung oder Relais.
+# Dies sind erkannte Temperaturzyklen, KEIN gemessener Brenner- oder Pumpenzustand.
+# Ohne Recorder wird die 24h-Historie nicht zuverlässig verfügbar sein.
+# Hysterese: upper=7 K ±1.5 K => EIN über 8.5 K, AUS unter 5.5 K.
+# Entprellung: mindestens 30 s an, 45 s aus. Für andere Anlagen abstimmen.
+# Rohsensoren: Slot 1 (Vorlauf) und Slot 2 (Rücklauf). Andere Belegung:
+# in diesem Package die beiden IDs in den Temperatur- und Statistik-Sensoren ändern.
+
+input_boolean:
+  keller_heizkreis_auswertung_aktiv:
+    name: Heizkreis Taktanalyse aktiviert
+    icon: mdi:chart-timeline-variant
+    # Standard beim ersten Einrichten aus. Bei Einschalten beginnt die neue Erfassung.
+
+counter:
+  keller_heizkreis_starts_gesamt:
+    name: Heizkreis erkannte Starts gesamt
+    icon: mdi:counter
+    step: 1
+    restore: true
+
+input_datetime:
+  keller_heizkreis_beginn:
+    name: Heizkreis letztes Aktiv-Beginn
+    has_date: true
+    has_time: true
+  keller_heizkreis_pause_beginn:
+    name: Heizkreis letztes Pause-Beginn
+    has_date: true
+    has_time: true
+
+input_number:
+  keller_heizkreis_laufzeit_letzte:
+    name: Letzter erkannter Heiztakt
+    min: 0
+    max: 1440
+    step: 0.1
+    mode: box
+    unit_of_measurement: min
+  keller_heizkreis_pause_letzte:
+    name: Letzte erkannte Heizpause
+    min: 0
+    max: 1440
+    step: 0.1
+    mode: box
+    unit_of_measurement: min
+  keller_heizkreis_laufzeit_summe:
+    name: Heizkreis Laufzeit-Summe
+    min: 0
+    max: 10000000
+    step: 0.1
+    mode: box
+    unit_of_measurement: min
+  keller_heizkreis_pause_summe:
+    name: Heizkreis Pausen-Summe
+    min: 0
+    max: 10000000
+    step: 0.1
+    mode: box
+    unit_of_measurement: min
+  keller_heizkreis_laufzeit_anzahl:
+    name: Heizkreis vollständige Takte
+    min: 0
+    max: 1000000
+    step: 1
+    mode: box
+  keller_heizkreis_pause_anzahl:
+    name: Heizkreis vollständige Pausen
+    min: 0
+    max: 1000000
+    step: 1
+    mode: box
+  keller_heizkreis_laufzeit_min:
+    name: Heizkreis kürzester Takt
+    min: 0
+    max: 1440
+    step: 0.1
+    mode: box
+    unit_of_measurement: min
+  keller_heizkreis_laufzeit_max:
+    name: Heizkreis längster Takt
+    min: 0
+    max: 1440
+    step: 0.1
+    mode: box
+    unit_of_measurement: min
+  keller_heizkreis_pause_min:
+    name: Heizkreis kürzeste Pause
+    min: 0
+    max: 1440
+    step: 0.1
+    mode: box
+    unit_of_measurement: min
+  keller_heizkreis_pause_max:
+    name: Heizkreis längste Pause
+    min: 0
+    max: 1440
+    step: 0.1
+    mode: box
+    unit_of_measurement: min
+
+template:
+  - sensor:
+      - name: Keller Heizkreis Spreizung
+        unique_id: keller_heizkreis_spreizung
+        default_entity_id: sensor.keller_heizkreis_spreizung
+        unit_of_measurement: K
+        state_class: measurement
+        icon: mdi:thermometer-lines
+        availability: >-
+          {{ is_number(states('sensor.heizungskeller_sensoren_slot_1'))
+             and is_number(states('sensor.heizungskeller_sensoren_slot_2')) }}
+        state: >-
+          {{ (states('sensor.heizungskeller_sensoren_slot_1') | float(0)
+             - states('sensor.heizungskeller_sensoren_slot_2') | float(0)) | round(1) }}
+      - name: Keller Heizkreis Starts Gesamt
+        unique_id: keller_heizkreis_starts_gesamt_sensor
+        default_entity_id: sensor.keller_heizkreis_starts_gesamt
+        icon: mdi:counter
+        state_class: total_increasing
+        availability: "{{ is_number(states('counter.keller_heizkreis_starts_gesamt')) }}"
+        state: "{{ states('counter.keller_heizkreis_starts_gesamt') | int(0) }}"
+      - name: Keller Heizkreis Laufzeit Durchschnitt
+        unique_id: keller_heizkreis_laufzeit_durchschnitt
+        default_entity_id: sensor.keller_heizkreis_laufzeit_durchschnitt
+        icon: mdi:timer-outline
+        unit_of_measurement: min
+        state_class: measurement
+        availability: >-
+          {{ states('input_number.keller_heizkreis_laufzeit_anzahl') | int(0) > 0 }}
+        state: >-
+          {{ (states('input_number.keller_heizkreis_laufzeit_summe') | float(0) /
+               states('input_number.keller_heizkreis_laufzeit_anzahl') | float(1)) | round(1) }}
+      - name: Keller Heizkreis Pause Durchschnitt
+        unique_id: keller_heizkreis_pause_durchschnitt
+        default_entity_id: sensor.keller_heizkreis_pause_durchschnitt
+        icon: mdi:timer-outline
+        unit_of_measurement: min
+        state_class: measurement
+        availability: >-
+          {{ states('input_number.keller_heizkreis_pause_anzahl') | int(0) > 0 }}
+        state: >-
+          {{ (states('input_number.keller_heizkreis_pause_summe') | float(0) /
+               states('input_number.keller_heizkreis_pause_anzahl') | float(1)) | round(1) }}
+      - name: Keller Heizkreis Taktbewertung
+        unique_id: keller_heizkreis_taktbewertung
+        default_entity_id: sensor.keller_heizkreis_taktbewertung
+        icon: mdi:chart-timeline-variant
+        state: >-
+          {% if not is_state('input_boolean.keller_heizkreis_auswertung_aktiv', 'on') %}
+            Auswertung aus
+          {% elif not has_value('sensor.keller_heizkreis_starts_letzte_stunde') %}
+            Noch keine Daten
+          {% elif states('sensor.keller_heizkreis_starts_letzte_stunde') | float(0) >= 8 %}
+            Viele erkannte Zyklen
+          {% elif states('sensor.keller_heizkreis_starts_letzte_stunde') | float(0) >= 5 %}
+            Mehrere Zyklen pro Stunde
+          {% else %}
+            Wenige erkannte Zyklen
+          {% endif %}
+  - binary_sensor:
+      - name: Keller Heizkreis aktiv
+        unique_id: keller_heizkreis_aktiv
+        default_entity_id: binary_sensor.keller_heizkreis_aktiv
+        icon: mdi:radiator
+        availability: >-
+          {{ is_state('input_boolean.keller_heizkreis_auswertung_aktiv', 'on')
+             and is_number(states('sensor.keller_heizkreis_spreizung'))
+             and has_value('binary_sensor.keller_heizkreis_schwelle') }}
+        state: "{{ is_state('binary_sensor.keller_heizkreis_schwelle', 'on') }}"
+        delay_on: "00:00:30"
+        delay_off: "00:00:45"
+
+binary_sensor:
+  - platform: threshold
+    name: Keller Heizkreis Schwelle
+    entity_id: sensor.keller_heizkreis_spreizung
+    upper: 7
+    hysteresis: 1.5
+
+sensor:
+  - platform: history_stats
+    name: Keller Heizkreis Starts Letzte Stunde
+    unique_id: keller_heizkreis_starts_letzte_stunde
+    entity_id: binary_sensor.keller_heizkreis_aktiv
+    state: "on"
+    type: count
+    end: '{{ now() }}'
+    duration:
+      hours: 1
+
+  - platform: history_stats
+    name: Keller Heizkreis Starts 24h
+    unique_id: keller_heizkreis_starts_24h
+    entity_id: binary_sensor.keller_heizkreis_aktiv
+    state: "on"
+    type: count
+    end: '{{ now() }}'
+    duration:
+      hours: 24
+
+  - platform: history_stats
+    name: Keller Heizkreis Laufzeit Heute
+    unique_id: keller_heizkreis_laufzeit_heute
+    entity_id: binary_sensor.keller_heizkreis_aktiv
+    state: "on"
+    type: time
+    start: '{{ today_at() }}'
+    end: '{{ now() }}'
+
+  - platform: history_stats
+    name: Keller Heizkreis Pause Heute
+    unique_id: keller_heizkreis_pause_heute
+    entity_id: binary_sensor.keller_heizkreis_aktiv
+    state: "off"
+    type: time
+    start: '{{ today_at() }}'
+    end: '{{ now() }}'
+
+  - platform: statistics
+    name: Heizkreis Vorlauf Mittel 24h
+    unique_id: keller_heizkreis_vorlauf_mittel_24h
+    entity_id: sensor.heizungskeller_sensoren_slot_1
+    state_characteristic: mean
+    max_age:
+      hours: 24
+    sampling_size: 2000
+    precision: 1
+
+  - platform: statistics
+    name: Heizkreis Rücklauf Mittel 24h
+    unique_id: keller_heizkreis_ruecklauf_mittel_24h
+    entity_id: sensor.heizungskeller_sensoren_slot_2
+    state_characteristic: mean
+    max_age:
+      hours: 24
+    sampling_size: 2000
+    precision: 1
+
+  - platform: statistics
+    name: Heizkreis Spreizung Mittel 24h
+    unique_id: keller_heizkreis_spreizung_mittel_24h
+    entity_id: sensor.keller_heizkreis_spreizung
+    state_characteristic: mean
+    max_age:
+      hours: 24
+    sampling_size: 2000
+    precision: 1
+
+  - platform: statistics
+    name: Heizkreis Vorlauf Maximum 24h
+    unique_id: keller_heizkreis_vorlauf_max_24h
+    entity_id: sensor.heizungskeller_sensoren_slot_1
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+    sampling_size: 2000
+    precision: 1
+
+  - platform: statistics
+    name: Heizkreis Rücklauf Minimum 24h
+    unique_id: keller_heizkreis_ruecklauf_min_24h
+    entity_id: sensor.heizungskeller_sensoren_slot_2
+    state_characteristic: value_min
+    max_age:
+      hours: 24
+    sampling_size: 2000
+    precision: 1
+
+  - platform: statistics
+    name: Heizkreis Spreizung Maximum 24h
+    unique_id: keller_heizkreis_spreizung_max_24h
+    entity_id: sensor.keller_heizkreis_spreizung
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+    sampling_size: 2000
+    precision: 1
+
+utility_meter:
+  keller_heizkreis_starts_heute:
+    source: sensor.keller_heizkreis_starts_gesamt
+    cycle: daily
+    unique_id: keller_heizkreis_starts_heute
+    periodically_resetting: false
+  keller_heizkreis_starts_woche:
+    source: sensor.keller_heizkreis_starts_gesamt
+    cycle: weekly
+    unique_id: keller_heizkreis_starts_woche
+    periodically_resetting: false
+
+automation:
+  - id: keller_heizkreis_zyklen_v1
+    alias: Keller Heizkreis - Temperaturzyklen zaehlen
+    description: >-
+      Zaehlt aus Vorlauf-/Ruecklauf-Spreizung abgeleitete Aktivphasen. Keine
+      Aussage ueber exakte Brennerlaufzeit. Startet erst nach Aktivierung.
+    mode: queued
+    max: 5
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.keller_heizkreis_aktiv
+        from: "off"
+        to: "on"
+        id: start
+      - trigger: state
+        entity_id: binary_sensor.keller_heizkreis_aktiv
+        from: "on"
+        to: "off"
+        id: end
+    conditions:
+      - condition: state
+        entity_id: input_boolean.keller_heizkreis_auswertung_aktiv
+        state: "on"
+    actions:
+      - choose:
+          - conditions:
+              - condition: trigger
+                id: start
+            sequence:
+              - action: counter.increment
+                target:
+                  entity_id: counter.keller_heizkreis_starts_gesamt
+
+              - variables:
+                  pause: "{{ ((as_timestamp(now()) - as_timestamp(states('input_datetime.keller_heizkreis_pause_beginn'), 0)) / 60) | round(1) }}"
+              - if:
+                  - condition: template
+                    value_template: "{{ 0.5 <= pause | float(0) <= 1440 }}"
+                then:
+                  - action: input_number.set_value
+                    target:
+                      entity_id: input_number.keller_heizkreis_pause_letzte
+                    data:
+                      value: "{{ pause }}"
+                  - action: input_number.set_value
+                    target:
+                      entity_id: input_number.keller_heizkreis_pause_summe
+                    data:
+                      value: "{{ (states('input_number.keller_heizkreis_pause_summe') | float(0) + pause | float(0)) | round(1) }}"
+                  - action: input_number.set_value
+                    target:
+                      entity_id: input_number.keller_heizkreis_pause_anzahl
+                    data:
+                      value: "{{ states('input_number.keller_heizkreis_pause_anzahl') | int(0) + 1 }}"
+                  - action: input_number.set_value
+                    target:
+                      entity_id: input_number.keller_heizkreis_pause_min
+                    data:
+                      value: "{{ [states('input_number.keller_heizkreis_pause_min') | float(0), pause | float(0)] | min if states('input_number.keller_heizkreis_pause_min') | float(0) > 0 else pause | float(0) }}"
+                  - action: input_number.set_value
+                    target:
+                      entity_id: input_number.keller_heizkreis_pause_max
+                    data:
+                      value: "{{ [states('input_number.keller_heizkreis_pause_max') | float(0), pause | float(0)] | max }}"
+              - action: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.keller_heizkreis_beginn
+                data:
+                  datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          - conditions:
+              - condition: trigger
+                id: end
+            sequence:
+
+              - variables:
+                  runtime: "{{ ((as_timestamp(now()) - as_timestamp(states('input_datetime.keller_heizkreis_beginn'), 0)) / 60) | round(1) }}"
+              - if:
+                  - condition: template
+                    value_template: "{{ 0.5 <= runtime | float(0) <= 1440 }}"
+                then:
+                  - action: input_number.set_value
+                    target:
+                      entity_id: input_number.keller_heizkreis_laufzeit_letzte
+                    data:
+                      value: "{{ runtime }}"
+                  - action: input_number.set_value
+                    target:
+                      entity_id: input_number.keller_heizkreis_laufzeit_summe
+                    data:
+                      value: "{{ (states('input_number.keller_heizkreis_laufzeit_summe') | float(0) + runtime | float(0)) | round(1) }}"
+                  - action: input_number.set_value
+                    target:
+                      entity_id: input_number.keller_heizkreis_laufzeit_anzahl
+                    data:
+                      value: "{{ states('input_number.keller_heizkreis_laufzeit_anzahl') | int(0) + 1 }}"
+                  - action: input_number.set_value
+                    target:
+                      entity_id: input_number.keller_heizkreis_laufzeit_min
+                    data:
+                      value: "{{ [states('input_number.keller_heizkreis_laufzeit_min') | float(0), runtime | float(0)] | min if states('input_number.keller_heizkreis_laufzeit_min') | float(0) > 0 else runtime | float(0) }}"
+                  - action: input_number.set_value
+                    target:
+                      entity_id: input_number.keller_heizkreis_laufzeit_max
+                    data:
+                      value: "{{ [states('input_number.keller_heizkreis_laufzeit_max') | float(0), runtime | float(0)] | max }}"
+              - action: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.keller_heizkreis_pause_beginn
+                data:
+                  datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
