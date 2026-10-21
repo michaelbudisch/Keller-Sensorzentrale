@@ -1,6 +1,6 @@
 # Heizkreis – Temperaturbasierte Taktanalyse (Home Assistant)
 
-**Komponente:** `packages/keller_heiztakte.yaml` v1.0.1 · **Seitenpanel:** v2.3.2 · **Firmware:** unverändert v1.9.6.
+**Komponente:** `packages/keller_heiztakte.yaml` v1.0.1 · **Seitenpanel:** v2.4.0 · **Firmware:** unverändert v1.9.6.
 
 ## Warum eine eigene Auswertung?
 
@@ -18,7 +18,7 @@ Die bisherige Kellersteuerung behält ihre Rollen:
 1. Die bestehenden Dateien und Helfer in HA sichern. **Nicht** vorhandene Ölverbrauchszähler löschen, umbenennen oder zurücksetzen.
 2. `home-assistant/packages/keller_heiztakte.yaml` nach **`/config/packages/keller_heiztakte.yaml`** kopieren; `/config` meint das Verzeichnis der tatsächlich aktiven `configuration.yaml`. `homeassistant: packages: !include_dir_named packages` muss bereits eingerichtet sein.
 3. Paneldateien `home-assistant/custom_components/heizoel_dashboard_panel/{__init__.py,manifest.json,frontend/heizoel-panel.js}` nach `/config/custom_components/heizoel_dashboard_panel/` aktualisieren. Das bestehende Panel nicht doppelt registrieren.
-4. **Entwicklerwerkzeuge → YAML → Konfiguration prüfen**, anschließend Home Assistant vollständig neu starten. Panel neu öffnen oder Strg+F5. Im Footer steht v2.3.2; das Python-Modul verwendet Cache-Busting `?v=2_3_2`.
+4. **Entwicklerwerkzeuge → YAML → Konfiguration prüfen**, anschließend Home Assistant vollständig neu starten. Panel neu öffnen oder Strg+F5. Im Footer steht v2.4.0; das Python-Modul verwendet Cache-Busting `?v=2_4_0`.
 5. **Heizung & Takte** öffnen: Im Block Heiztakt-Analyse **„Auswertung aktivieren“** klicken oder `input_boolean.keller_heizkreis_auswertung_aktiv` einschalten. **Ab diesem Zeitpunkt** werden neu erkannte Aktivphasen gezählt; frühere historische Peaks führen nicht zu genauen alten Starts.
 6. Mindestens 24–72 Stunden messen und Schwellwerte / Mindestzeiten mit den Kurven abgleichen, bevor du die Taktbewertung interpretierst.
 
@@ -108,3 +108,8 @@ Weitere erwartete (nach YAML-Namen abgeleitete, noch nicht im Screenshot bestät
 **Fehlende Werte:** Package tatsächlich im richtigen Ordner? Geräte vorab online? Freigabe aktiviert? In HA die Entitäts-IDs durch Suche `keller_heizkreis` überprüfen; HA kann bei bereits existierenden IDs einen Suffix vergeben. Alte Template-Helfer `sensor.heizung_spreizung` dürfen neben dem neuen Package-Sensor bestehen; beide Messwerte müssen aber nicht gleich verzögert sein.
 
 **Datensicherheit:** Das Package ändert keine Relaiszustände, keine Heizungsparameter und keine vorhandene Heizöl-Verbrauchsrechnung. Alle Änderungen sind auf Home Assistant beschränkt.
+
+
+## Heizkurve ab Panel v2.4.0: einzelne Kalendertage statt 30 Tage im selben Diagramm
+
+Der Hauptverlauf im Reiter „Heizung & Takte“ zeigt **heute**. Ein Klick öffnet eine größere Tagesansicht mit Datumswahl, Vor-/Nächster-Tag und 6-Stunden-Ausschnitten. Die drei Kurven lassen sich auf nur Temperaturen oder nur Spreizung reduzieren. Die Ansicht nutzt den bestehenden Recorder und ändert keine Sensorik oder berechneten Heiztakte. Frühere Tage können nur abgerufen werden, solange sie im Recorder gespeichert sind. Die verwendeten Zeitgrenzen folgen dem lokalen Kalenderdatum (inklusive Sommer-/Winterzeit).

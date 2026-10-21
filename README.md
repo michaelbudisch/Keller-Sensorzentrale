@@ -2,7 +2,7 @@
 
 **ESP8266 / Wemos D1 mini · Tankfüllstand · 6 DS18B20-Slots · 2 Relais · MQTT & Home Assistant**
 
-**Softwarestand:** Firmware v1.9.6 · HA-Pakete v2.1.0 · **Seitenpanel v2.3.2** · Lovelace-Karte v2.1.1 ([Installationshinweise bei alter Heizölmonitor-Karte](docs/home-assistant/INSTALLATION.md#lovelace-karte-alte-anzeige-oder-falscher-gesamtbestand)).
+**Softwarestand:** Firmware v1.9.6 · HA-Pakete v2.1.0 · **Seitenpanel v2.4.0** · Lovelace-Karte v2.1.1 ([Installationshinweise bei alter Heizölmonitor-Karte](docs/home-assistant/INSTALLATION.md#lovelace-karte-alte-anzeige-oder-falscher-gesamtbestand)).
 
 Eine modulare Sensorzentrale für den Heizungskeller: Das kleine Board sammelt Messwerte und stellt sie per MQTT bereit. Home Assistant übernimmt die Langzeitverläufe, die 5-Minuten-Glättung und die (optional aktivierte) Heizöl-Verbrauchsauswertung.
 
@@ -22,6 +22,10 @@ Die GitHub-Dateien sind die gemeinsame Codebasis für zukünftige Weiterentwickl
 
 **[→ 3D-Druck-Gehäuse auf MakerWorld](https://makerworld.com/en/models/3464324-wemos-d1-gehause-fur-ds18b20-und-relais#profileId-3953596)** · **[→ Vollständige Bildergalerie](docs/galerie/README.md)** · **[→ Gehäusedokumentation](enclosure/README.md)** · Die Modelldateien und das Druckprofil werden über MakerWorld angeboten, nicht im GitHub-Repository.
 
+
+### Tagesweise Heizkreisgrafik (Panel v2.4.0)
+
+Im Reiter **Heizung & Takte** wird zunächst nur der heutige Tagesverlauf gezeigt. Ein Klick öffnet eine große Detailansicht zum Wechseln zwischen Tagen und 6-Stunden-Fenstern sowie zum Ausblenden einzelner Kurven. Die Historie stammt weiterhin aus dem HA-Recorder; Tank- und Ölverbrauchsgrafiken sind unverändert.
 
 ### Optionale Heiztakt-Auswertung
 

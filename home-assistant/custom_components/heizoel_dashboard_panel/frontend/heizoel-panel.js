@@ -1,5 +1,5 @@
 /* Keller Sensorzentrale UI engine v1.0.0 — no external dependencies */
-const HM_VERSION = '2.3.2';
+const HM_VERSION = '2.4.0';
 const HM_FIELDS = [
  ['total','Gesamtbestand (5 Min)','sensor','keller_tank_gesamt_5min|gesamtbestand.*(gesch|geschätzt)|estimated_total_liters'],
  ['single','Einzeltank (5 Min)','sensor','keller_tank_einzeln_5min|tank_einzeln|tank einzeln|tank_liters'],
@@ -76,6 +76,7 @@ const HM_STYLES = `
 .hm-cycle-group{margin-top:22px}.hm-cycle-group h3{margin:0 0 5px;font-size:15px;font-weight:740}.hm-cycle-group>.hm-small{margin:0 0 12px;line-height:1.5}.hm-cycle-group+.hm-cycle-group{border-top:1px solid var(--hm-line);padding-top:20px}
 .hm-section{margin-top:17px}.hm-note{background:rgba(56,166,220,.08);border:1px solid rgba(56,166,220,.22);border-radius:12px;padding:12px 15px;color:var(--hm-muted);font-size:12px;line-height:1.6;margin-top:15px}
 .hm-charthead{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px}.hm-charthead h2{margin:0}.hm-chartnav{display:flex;gap:4px;padding:4px;background:var(--hm-sub);border-radius:10px}.hm-chartnav button{padding:6px 10px;border:none;border-radius:7px;background:transparent;color:inherit;font-size:12px;font-weight:650}.hm-chartnav button.active{background:var(--hm-bg);box-shadow:0 1px 4px rgba(0,0,0,.14)}
+.hm-heat-preview{position:relative;margin-top:15px;min-height:190px}.hm-heat-open{position:absolute;inset:0;width:100%;height:100%;background:transparent;border:0;color:inherit;cursor:zoom-in;z-index:1;display:flex;align-items:flex-start;justify-content:flex-end;padding:7px}.hm-heat-open span{border:1px solid var(--hm-line);background:var(--hm-bg);border-radius:9px;padding:9px 12px;box-shadow:0 1px 7px rgba(0,0,0,.25);font-size:12px;font-weight:700}.hm-heat-open:hover span{background:var(--hm-sub)}.hm-heat-modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.80);overflow-y:auto;padding:clamp(10px,3vw,36px);display:flex;align-items:flex-start;justify-content:center}.hm-heat-dialog{background:var(--hm-bg);border:1px solid var(--hm-line);border-radius:16px;padding:clamp(15px,2.2vw,28px);width:min(1500px,100%);box-shadow:0 18px 60px rgba(0,0,0,.5)}.hm-heat-dialog .hm-graph{min-height:250px}.hm-heat-controls{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:12px 0}.hm-heat-controls input[type=date]{min-height:37px;padding:8px 11px;border:1px solid var(--hm-line);background:var(--hm-sub);border-radius:9px;color:inherit;color-scheme:dark}.hm-heat-controls .hm-btn{padding:8px 12px}.hm-heat-close{margin-left:auto}.hm-heat-dialog .hm-chartnav{width:max-content;max-width:100%;flex-wrap:wrap}.hm-heat-dialog .hm-chartnav button{min-height:34px}.hm-heat-plot{min-height:270px}
 .hm-graph{width:100%;height:auto;display:block;min-height:170px}.hm-graph text{fill:var(--hm-muted);font:12px system-ui,sans-serif}.hm-gridline{stroke:var(--hm-line);stroke-width:1}.hm-area{fill:rgba(55,169,206,.12)}.hm-line{stroke:var(--hm-accent);stroke-width:2.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .hm-empty{height:200px;display:grid;place-items:center;text-align:center;color:var(--hm-muted);font-size:13px;padding:22px}.hm-error{color:#eab08a}
 .hm-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.hm-field{display:flex;flex-direction:column;gap:7px;min-width:0}.hm-field label{font-size:12px;color:var(--hm-muted)}.hm-field select,.hm-field input{background:var(--hm-sub);border:1px solid var(--hm-line);color:inherit;border-radius:9px;padding:10px 12px;min-width:0;width:100%;font-size:13px}
@@ -350,10 +351,38 @@ function ksHeatTiles(hass,map){
    hmTile('Spreizung (Vorlauf − Rücklauf)',hmFmt(difference,1),'K')+
    '</div><p class="hm-small" style="margin-top:10px">Standard: Slot 1 = Vorlauf, Slot 2 = Rücklauf. Unter Einstellungen frei änderbar.</p>';
 }
-function ksHeatSection(hass,map,days,graph){
- return '<div class="hm-section hm-panel"><div class="hm-charthead"><h2>Heizkreis · Vorlauf, Rücklauf & Spreizung</h2>'+ksTimeNav(days)+'</div>'+
-    ksHeatTiles(hass,map)+'<div id="ks-heating-history" style="margin-top:15px">'+
-    (graph||'<div class="hm-empty">Heizkreisverlauf wird geladen …</div>')+'</div></div>';
+
+function ksDayKey(date=new Date()){return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');}
+function ksDayBounds(day){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(day))throw Error('Ungültiges Datum');
+ const [y,m,d]=day.split('-').map(Number),start=new Date(y,m-1,d),end=new Date(y,m-1,d+1);
+ if(ksDayKey(start)!==day)throw Error('Ungültiges Kalenderdatum');
+ return {start:start.getTime(),end:Math.min(end.getTime(),Date.now())};
+}
+function ksShiftDay(day,shift){const d=new Date(ksDayBounds(day).start);d.setDate(d.getDate()+shift);return ksDayKey(d);}
+function ksHeatSection(hass,map,graph){
+ return '<div class="hm-section hm-panel"><div class="hm-charthead"><h2>Heizkreis · Vorlauf, Rücklauf & Spreizung</h2><span class="hm-small">Heute · '+hmEscape(new Date().toLocaleDateString('de-DE'))+'</span></div>'+
+  ksHeatTiles(hass,map)+'<div class="hm-heat-preview"><div id="ks-heating-history">'+
+  (graph||'<div class="hm-empty">Heutigen Verlauf laden …</div>')+
+  '</div><button data-action="open-heat-detail" class="hm-heat-open" aria-label="Tagesdetails mit Datumswahl öffnen" title="Tagesdetails öffnen"><span>↗ Tagesdetails öffnen</span></button></div>'+
+  '<p class="hm-small">Anzeige nur für heute. Klicke auf die Grafik, um einzelne Tage oder Stunden genauer zu betrachten.</p></div>';
+}
+function ksHeatDetailModal(day,zoom,view,graph){
+ const today=ksDayKey();
+ const caption=new Date(ksDayBounds(day).start).toLocaleDateString('de-DE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+ const segments=[['all','Ganzer Tag'],['0','00–06'],['6','06–12'],['12','12–18'],['18','18–24']];
+ const curves=[['all','Alle Kurven'],['temp','Vorlauf / Rücklauf'],['spread','Nur Spreizung']];
+ return '<div class="hm-heat-modal"><div class="hm-heat-dialog" role="dialog" aria-modal="true" aria-label="Heizkreis Tagesdetails" tabindex="-1">'+
+  '<div class="hm-charthead"><h2>Heizkreis · Tagesdetails</h2><button class="hm-btn secondary hm-heat-close" data-action="close-heat-detail">✕ Schließen</button></div>'+
+  '<div class="hm-heat-controls"><button class="hm-btn secondary" data-action="prev-heat-day">← Vortag</button>'+
+  '<label class="hm-small" for="ks-heat-date">Datum</label><input id="ks-heat-date" type="date" value="'+hmEscape(day)+'" max="'+hmEscape(today)+'" aria-label="Datum für Verlauf wählen">'+
+  '<button class="hm-btn secondary" data-action="next-heat-day" '+(day>=today?'disabled':'')+'>Nächster Tag →</button>'+
+  '<button class="hm-btn secondary" data-action="today-heat-day" '+(day===today?'disabled':'')+'>Heute</button></div>'+
+  '<p class="hm-small"><strong>'+hmEscape(caption)+'</strong> · Stundenbereich wählen</p>'+
+  '<div class="hm-chartnav" aria-label="Stundenbereich">'+segments.map(([id,label])=>'<button data-heat-zoom="'+id+'" class="'+(id===zoom?'active':'')+'">'+label+'</button>').join('')+'</div>'+
+  '<div class="hm-chartnav" aria-label="Kurvenauswahl" style="margin:12px 0">'+curves.map(([id,label])=>'<button data-heat-view="'+id+'" class="'+(id===view?'active':'')+'">'+label+'</button>').join('')+'</div>'+
+  '<div id="ks-heating-detail-history" class="hm-heat-plot" aria-live="polite">'+(graph||'<div class="hm-empty">Verlauf für ausgewählten Tag laden …</div>')+'</div>'+
+  '<p class="hm-small">Zeitangaben in der lokalen Browser-Zeitzone. Frühere Tage sind nur verfügbar, solange Home Assistant die Daten im Recorder speichert.</p></div></div>';
 }
 function ksDeltaHistory(flow,ret){
  // Asynchrone Recorder-Änderungen zeitlich zusammenführen; keine Paarung
@@ -370,28 +399,69 @@ function ksDeltaHistory(flow,ret){
  }
  return hmDownsample(out);
 }
-async function ksHeatHistory(hass,map,days){
+
+async function ksHistoryRange(hass,id,start,end){
+ if(!id||end<=start)return [];
+ const url='history/period/'+encodeURIComponent(new Date(start).toISOString())+
+  '?filter_entity_id='+encodeURIComponent(id)+'&end_time='+encodeURIComponent(new Date(end).toISOString())+'&minimal_response&no_attributes';
+ const data=await hass.callApi('GET',url);
+ const rows=Array.isArray(data)?(data.find(r=>Array.isArray(r)&&r.some(p=>p.entity_id===id))||data[0]||[]):[];
+ return hmDownsample(rows.map(r=>({v:hmNumber(r.state),t:Date.parse(r.last_changed||r.last_updated)}))
+   .filter(p=>Number.isFinite(p.v)&&Number.isFinite(p.t)&&p.t>=start&&p.t<=end).sort((a,b)=>a.t-b.t),450);
+}
+async function ksCycleIntervalsRange(hass,start,end){
+ const id='binary_sensor.keller_heizkreis_aktiv';if(end<=start||!hass?.states?.[id])return [];
+ const url='history/period/'+encodeURIComponent(new Date(start).toISOString())+
+  '?filter_entity_id='+encodeURIComponent(id)+'&end_time='+encodeURIComponent(new Date(end).toISOString())+'&minimal_response&no_attributes';
+ const data=await hass.callApi('GET',url);
+ const rows=Array.isArray(data)?(data.find(r=>Array.isArray(r)&&r.some(p=>p.entity_id===id))||data[0]||[]):[];
+ const states=rows.map(r=>({s:r.state,t:Date.parse(r.last_changed||r.last_updated)}))
+  .filter(p=>Number.isFinite(p.t)&&p.t<=end).sort((a,b)=>a.t-b.t);
+ let opened=null;const out=[];
+ for(const p of states){
+  if(p.s==='on'&&opened===null)opened=Math.max(start,p.t);
+  else if(p.s!=='on'&&opened!==null){if(p.t>opened)out.push([opened,p.t]);opened=null;}
+ }
+ if(opened!==null)out.push([opened,end]);
+ return out;
+}
+async function ksHeatDayData(hass,map,day){
+ const {start,end}=ksDayBounds(day);
+ if(end<=start)return {start,end,series:[],intervals:[]};
  if(!hmSafeId(map.flow)||!hmSafeId(map.return)||map.flow===map.return||
-   !hass?.states?.[map.flow]||!hass?.states?.[map.return])
-  return '<div class="hm-empty">Bitte Vorlauf und Rücklauf in Einstellungen auf zwei unterschiedliche Temperatur-Entitäten legen.</div>';
+    !hass?.states?.[map.flow]||!hass?.states?.[map.return])
+  return {start,end,error:'Vorlauf und Rücklauf als verschiedene gültige Sensoren zuordnen.'};
  const delta=map.spread&&hass.states[map.spread]&&map.spread!==map.flow&&map.spread!==map.return?map.spread:null;
  const [flow,ret,saved,intervals]=await Promise.all([
-  hmHistory(hass,map.flow,days),hmHistory(hass,map.return,days),
-  delta?hmHistory(hass,delta,days).catch(()=>[]):Promise.resolve([]),
-  ksCycleIntervals(hass,days).catch(()=>[])
+  ksHistoryRange(hass,map.flow,start,end),ksHistoryRange(hass,map.return,start,end),
+  delta?ksHistoryRange(hass,delta,start,end).catch(()=>[]):Promise.resolve([]),
+  ksCycleIntervalsRange(hass,start,end).catch(()=>[])
  ]);
- return ksMultiSvg([
+ return {start,end,intervals,series:[
   {label:'Vorlauf',color:'#faad4c',points:flow},
   {label:'Rücklauf',color:'#35b1e2',points:ret},
   {label:'Spreizung',color:'#c5a1ef',axis:'spread',points:saved.length>=2?saved:ksDeltaHistory(flow,ret)}
- ],intervals);
+ ]};
 }
-
+function ksRenderHeatDay(data,zoom='all',view='all'){
+ if(data.error)return '<div class="hm-empty">'+hmEscape(data.error)+'</div>';
+ let start=data.start,end=data.end;
+ if(zoom!=='all'){
+  const hour=Number(zoom);if(![0,6,12,18].includes(hour))throw Error('Ungültiger Abschnitt');
+  const date=new Date(data.start),y=date.getFullYear(),m=date.getMonth(),d=date.getDate();
+  start=new Date(y,m,d,hour).getTime();
+  end=Math.min(data.end,new Date(y,m,d,hour+6).getTime());
+ }
+ if(end<=start)return '<div class="hm-empty">Dieser Tagesabschnitt liegt noch in der Zukunft oder enthält keine Daten.</div>';
+ const filtered=data.series.filter(s=>view==='all'||(view==='spread'?s.axis==='spread':s.axis!=='spread'))
+  .map(s=>({...s,points:s.points.filter(p=>p.t>=start&&p.t<=end)}));
+ return ksMultiSvg(filtered,data.intervals,[start,end]);
+}
 function ksTimeNav(days){return `<div class="hm-chartnav">${[1,7,30].map(n=>`<button data-temp-days="${n}" class="${days===n?'active':''}">${n===1?'24 h':n+' Tage'}</button>`).join('')}</div>`;}
-function ksMultiSvg(series,intervals=[]){
+function ksMultiSvg(series,intervals=[],domain=null){
  const active=series.filter(s=>s.points?.length>=2);
  if(!active.length)return '<div class="hm-empty">Noch kein Temperaturverlauf. Sensoren zuordnen und Recorder aktivieren.</div>';
- const pts=active.flatMap(s=>s.points),start=Math.min(...pts.map(p=>p.t)),end=Math.max(...pts.map(p=>p.t));
+ const pts=active.flatMap(s=>s.points),start=domain?domain[0]:Math.min(...pts.map(p=>p.t)),end=domain?domain[1]:Math.max(...pts.map(p=>p.t));
  const tempPts=active.filter(s=>s.axis!=='spread').flatMap(s=>s.points.map(p=>p.v));
  const diffPts=active.filter(s=>s.axis==='spread').flatMap(s=>s.points.map(p=>p.v));
  const bounds=arr=>{if(!arr.length)return [0,1];let lo=Math.min(...arr),hi=Math.max(...arr);const pad=Math.max(.6,(hi-lo)*.12);return [lo-pad,hi+pad];};
@@ -428,36 +498,51 @@ async function ksTemperatureHistory(hass,map,days){
 function ksOverview(hass,map){return `<div class="hm-section hm-panel"><h2>Relaissteuerung</h2>${ksRelays(hass,map)}</div><div class="hm-section hm-panel"><h2>Temperatur-Slots · 1–6</h2>${ksTemps(hass,map)}</div><div class="hm-section hm-panel"><h2>Auswertungsbereiche</h2><p class="hm-small">Heizkreis und Taktung sind unter <b>Heizung & Takte</b>. Ölbestand und Ölverbrauch sind getrennt in <b>Tank & Verlauf</b> und <b>Ölverbrauch</b>.</p><div class="hm-toolbar"><button class="hm-btn" data-tab="heating">Heizung & Takte</button><button class="hm-btn secondary" data-tab="tank">Tank & Verlauf</button></div></div>`;}
 
 class HeizoelMonitorPanel extends HTMLElement {
- constructor(){super();this.attachShadow({mode:'open'});this._tab='overview';this._range=7;this._tempDays=1;this._historyCache=new Map();this._tempCache=new Map();this._heatCache=new Map();this._historyText='';this._tempText='';this._heatText='';this._lastSig='';this._lastRenderAt=0;this._pending=false;this._local={};try{this._local=JSON.parse(localStorage.getItem(HM_SAVE_KEY)||'{}')||{}}catch(_){}}
+ constructor(){super();this.attachShadow({mode:'open'});this._tab='overview';this._range=7;this._tempDays=1;this._historyCache=new Map();this._tempCache=new Map();this._heatCache=new Map();this._heatDataCache=new Map();this._heatRequests=new Map();this._heatDetailOpen=false;this._heatDetailDay=ksDayKey();this._heatZoom='all';this._heatView='all';this._heatDetailText='';this._historyText='';this._tempText='';this._heatText='';this._lastSig='';this._lastRenderAt=0;this._pending=false;this._local={};try{this._local=JSON.parse(localStorage.getItem(HM_SAVE_KEY)||'{}')||{}}catch(_){}}
  set hass(hass){this._hass=hass;this._schedule();}
  set panel(panel){this._panel=panel;this._schedule(true);}
  set narrow(v){this._narrow=v;}
- connectedCallback(){this.shadowRoot.addEventListener('click',(ev)=>this._click(ev));this._schedule(true);}
+ connectedCallback(){this.shadowRoot.addEventListener('click',(ev)=>this._click(ev));this.shadowRoot.addEventListener('change',(ev)=>this._change(ev));this.shadowRoot.addEventListener('keydown',(ev)=>{if(ev.key==='Escape'&&this._heatDetailOpen){this._heatDetailOpen=false;this._render();}});this._schedule(true);}
  _base(){return {...(this._panel?.config?.entities||{}),...this._local};}
  _map(){return hmAutoMap(this._hass,this._base());}
  _sig(){const m=this._map(),h=this._hass;return HM_FIELDS.map(([k])=>m[k]+':'+(h?.states?.[m[k]]?.state||'')).join('|')+'|'+KS_CYCLE_IDS.map(k=>h?.states?.[k]?.state||'').join('|')+'|'+this._tab+'|'+this._range+'|'+this._tempDays;}
- _schedule(force=false){if(!this.isConnected||!this._hass)return;if(this._pending)return;const sig=this._sig();if(!force&&sig===this._lastSig)return;if(!force&&this._tab==='settings')return;if(!force&&Date.now()-this._lastRenderAt<1500)return;this._pending=true;Promise.resolve().then(()=>{this._pending=false;if(this.isConnected)this._render()});}
+ _schedule(force=false){if(!this.isConnected||!this._hass)return;if(this._pending)return;const sig=this._sig();if(!force&&sig===this._lastSig)return;if(!force&&(this._tab==='settings'||this._heatDetailOpen))return;if(!force&&Date.now()-this._lastRenderAt<1500)return;this._pending=true;Promise.resolve().then(()=>{this._pending=false;if(this.isConnected)this._render()});}
  _click(ev){const item=ev.target.closest('button');if(!item)return;
+  if(item.dataset.action==='open-heat-detail'){this._heatDetailOpen=true;this._heatDetailDay=ksDayKey();this._heatZoom='all';this._heatView='all';this._heatDetailText='';this._render();this._focusHeatDialog();return;}
+  if(item.dataset.action==='close-heat-detail'){this._heatDetailOpen=false;this._render();return;}
+  if(['prev-heat-day','next-heat-day','today-heat-day'].includes(item.dataset.action)){
+   const next=item.dataset.action==='today-heat-day'?ksDayKey():ksShiftDay(this._heatDetailDay,item.dataset.action==='prev-heat-day'?-1:1);
+   if(next<=ksDayKey()){this._heatDetailDay=next;this._heatDetailText='';this._render();this._focusHeatDialog();}return;
+  }
+  if(item.dataset.heatZoom){this._heatZoom=item.dataset.heatZoom;this._heatDetailText='';this._render();this._focusHeatDialog();return;}
+  if(item.dataset.heatView){this._heatView=item.dataset.heatView;this._heatDetailText='';this._render();this._focusHeatDialog();return;}
   if(item.dataset.relay){ksRelayClick(this,item);return;}
    if(item.dataset.cycleAction){if(this._hass?.states?.['input_boolean.keller_heizkreis_auswertung_aktiv'])this._hass.callService('input_boolean',item.dataset.cycleAction==='on'?'turn_on':'turn_off',{entity_id:'input_boolean.keller_heizkreis_auswertung_aktiv'}).catch(()=>{});return;}
   if(item.dataset.action==='toggle-menu'){this.dispatchEvent(new Event('hass-toggle-menu',{bubbles:true,composed:true}));return;}
   if(item.dataset.tab){this._tab=item.dataset.tab;this._lastSig='';this._render();return;}
   if(item.dataset.days){this._range=Number(item.dataset.days);this._historyText='';this._lastSig='';this._render();return;}
-  if(item.dataset.tempDays){this._tempDays=Number(item.dataset.tempDays);this._tempText='';this._heatText='';this._lastSig='';this._render();return;}
-  if(item.dataset.action==='save-settings'){const next={};for(const select of this.shadowRoot.querySelectorAll('[data-entity]'))if(hmSafeId(select.value))next[select.dataset.entity]=select.value;this._local=next;try{localStorage.setItem(HM_SAVE_KEY,JSON.stringify(next))}catch(_){}this._historyCache.clear();this._tempCache.clear();this._heatCache.clear();this._heatText='';this._lastSig='';this._tab='overview';this._render();return;}
-  if(item.dataset.action==='reset-settings'){this._local={};try{localStorage.removeItem(HM_SAVE_KEY)}catch(_){}this._historyCache.clear();this._tempCache.clear();this._heatCache.clear();this._heatText='';this._lastSig='';this._render();return;}
-  if(item.dataset.action==='reload-history'){this._historyCache.clear();this._tempCache.clear();this._fetchOil(true);this._fetchTemp(true);this._fetchHeat(true);return;}
+  if(item.dataset.tempDays){this._tempDays=Number(item.dataset.tempDays);this._tempText='';this._lastSig='';this._render();return;}
+  if(item.dataset.action==='save-settings'){const next={};for(const select of this.shadowRoot.querySelectorAll('[data-entity]'))if(hmSafeId(select.value))next[select.dataset.entity]=select.value;this._local=next;try{localStorage.setItem(HM_SAVE_KEY,JSON.stringify(next))}catch(_){}this._historyCache.clear();this._tempCache.clear();this._heatCache.clear();this._heatDataCache.clear();this._heatText='';this._heatDetailText='';this._lastSig='';this._tab='overview';this._render();return;}
+  if(item.dataset.action==='reset-settings'){this._local={};try{localStorage.removeItem(HM_SAVE_KEY)}catch(_){}this._historyCache.clear();this._tempCache.clear();this._heatCache.clear();this._heatDataCache.clear();this._heatText='';this._heatDetailText='';this._lastSig='';this._render();return;}
+  if(item.dataset.action==='reload-history'){this._historyCache.clear();this._tempCache.clear();this._heatCache.clear();this._heatDataCache.clear();this._heatText='';this._heatDetailText='';this._fetchOil(true);this._fetchTemp(true);this._fetchHeat(true);return;}
  }
+ _change(ev){
+  if(ev.target?.id!=='ks-heat-date')return;
+  const day=String(ev.target.value||'');
+  try{ksDayBounds(day);if(day>ksDayKey())return;}catch(_){return;}
+  this._heatDetailDay=day;this._heatDetailText='';this._render();this._focusHeatDialog();
+ }
+ _focusHeatDialog(){this.shadowRoot.querySelector('.hm-heat-dialog')?.focus({preventScroll:true});}
  _render(){if(!this._hass||!this.isConnected)return;const map=this._map(),s=hmStatus(this._hass,map),t=this._tab;
   const sections={overview:'Übersicht',heating:'Heizung & Takte',temperatures:'Temperatur-Slots',tank:'Tank & Verlauf',analysis:'Ölverbrauch',settings:'Einstellungen'};
   let body=t==='overview'?ksOverview(this._hass,map):
-    t==='heating'?`${ksHeatSection(this._hass,map,this._tempDays,this._heatText)}${ksCyclePanel(this._hass)}`:
+    t==='heating'?`${ksHeatSection(this._hass,map,this._heatText)}${ksCyclePanel(this._hass)}${this._heatDetailOpen?ksHeatDetailModal(this._heatDetailDay,this._heatZoom,this._heatView,this._heatDetailText):''}`:
    t==='temperatures'?`<div class="hm-panel"><h2>Temperaturen · Slot 1–6</h2>${ksTemps(this._hass,map)}</div><div class="hm-section hm-panel"><div class="hm-charthead"><h2>Temperaturverlauf</h2>${ksTimeNav(this._tempDays)}</div><div id="ks-temperature-history">${this._tempText||'<div class="hm-empty">Lade Verlauf …</div>'}</div></div>`:
    t==='tank'?`<div class="hm-panel">${hmOverview(this._hass,map,this._range,this._historyText)}</div>`:
    t==='analysis'?hmAnalysis(this._hass,map):
    hmSettings(this._hass,map,this._base(),'panel');
   this.shadowRoot.innerHTML=`<style>${HM_STYLES}</style><main class="hm-wrap"><header class="hm-head"><div style="display:flex;align-items:center;gap:12px"><button class="hm-menu" data-action="toggle-menu" aria-label="Home-Assistant-Menü öffnen">☰</button><div><h1>Kellersteuerung</h1><p>Sensoren · Tank · Relais · Verläufe</p></div></div><span class="hm-status ${s.ok?'':'bad'}"><span class="hm-dot"></span>${hmEscape(s.text)}</span></header><nav class="hm-tabs" aria-label="Kellersteuerung Bereiche">${Object.entries(sections).map(([id,name])=>`<button data-tab="${id}" class="${t===id?'active':''}">${name}</button>`).join('')}</nav>${body}${hmFooterVersion()}</main>`;
-  this._lastSig=this._sig();this._lastRenderAt=Date.now();if(t==='tank')this._fetchOil();if(t==='temperatures')this._fetchTemp();if(t==='heating')this._fetchHeat();
+  this._lastSig=this._sig();this._lastRenderAt=Date.now();if(t==='tank')this._fetchOil();if(t==='temperatures')this._fetchTemp();if(t==='heating'){this._fetchHeat();if(this._heatDetailOpen)this._fetchHeatDetail();}
  }
  async _fetchOil(force=false){if(!this._hass)return;const id=this._map().total,key=this._range+':'+id,entry=this._historyCache.get(key),node=this.shadowRoot.getElementById('hm-history');if(!node)return;
   if(!force&&entry&&Date.now()-entry.time<300000){this._historyText=entry.html;node.innerHTML=entry.html;return;}if(this._oilLoading===key)return;this._oilLoading=key;
@@ -471,21 +556,47 @@ class HeizoelMonitorPanel extends HTMLElement {
   catch(_){const n=this.shadowRoot.getElementById('ks-temperature-history');if(n)n.innerHTML='<div class="hm-empty hm-error">Temperaturverlauf momentan nicht verfügbar (Recorder prüfen)</div>';}
   finally{if(this._tempLoading===key)this._tempLoading='';}
  }
+
+ async _heatData(day,force=false){
+  const map=this._map(),key=day+':'+[map.flow,map.return,map.spread].join(':');
+  const cached=this._heatDataCache.get(key),age=day===ksDayKey()?60000:86400000;
+  if(!force&&cached&&Date.now()-cached.time<age)return cached.data;
+  if(this._heatRequests.has(key))return this._heatRequests.get(key);
+  const request=ksHeatDayData(this._hass,map,day).then(data=>{
+   this._heatDataCache.set(key,{data,time:Date.now()});
+   if(this._heatDataCache.size>16)this._heatDataCache.delete(this._heatDataCache.keys().next().value);
+   return data;
+  }).finally(()=>this._heatRequests.delete(key));
+  this._heatRequests.set(key,request);
+  return request;
+ }
  async _fetchHeat(force=false){
   if(!this._hass)return;
-  const m=this._map(),key=this._tempDays+':'+[m.flow||'',m.return||'',m.spread||''].join(':');
-  const node=this.shadowRoot.getElementById('ks-heating-history'),entry=this._heatCache.get(key);
-  if(!node)return;
+  const day=ksDayKey(),map=this._map(),key=day+':'+[map.flow,map.return,map.spread].join(':');
+  const node=this.shadowRoot.getElementById('ks-heating-history');if(!node)return;
+  const entry=this._heatCache.get(key);
   if(!force&&entry&&Date.now()-entry.time<60000){this._heatText=entry.html;node.innerHTML=entry.html;return;}
-  if(this._heatLoading===key)return;
-  this._heatLoading=key;
   try{
-   const html=await ksHeatHistory(this._hass,m,this._tempDays);
+   const data=await this._heatData(day,force),html=ksRenderHeatDay(data);
    this._heatCache.set(key,{html,time:Date.now()});
-   if(this._heatLoading===key){this._heatText=html;const n=this.shadowRoot.getElementById('ks-heating-history');if(n)n.innerHTML=html;}
+   const n=this.shadowRoot.getElementById('ks-heating-history');
+   if(this._tab==='heating'&&day===ksDayKey()&&n){this._heatText=html;n.innerHTML=html;}
   }catch(_){
-   const n=this.shadowRoot.getElementById('ks-heating-history');if(n)n.innerHTML='<div class="hm-empty hm-error">Heizkreisverlauf nicht verfügbar (Recorder/Zuordnung prüfen).</div>';
-  }finally{if(this._heatLoading===key)this._heatLoading='';}
+   const n=this.shadowRoot.getElementById('ks-heating-history');
+   if(n)n.innerHTML='<div class="hm-empty hm-error">Tagesverlauf nicht verfügbar (Recorder prüfen).</div>';
+  }
+ }
+ async _fetchHeatDetail(force=false){
+  if(!this._hass||!this._heatDetailOpen)return;
+  const day=this._heatDetailDay,zoom=this._heatZoom,view=this._heatView;
+  const node=()=>this.shadowRoot.getElementById('ks-heating-detail-history');
+  try{
+   const data=await this._heatData(day,force),html=ksRenderHeatDay(data,zoom,view);
+   if(this._heatDetailOpen&&this._heatDetailDay===day&&this._heatZoom===zoom&&this._heatView===view&&node()){
+    this._heatDetailText=html;node().innerHTML=html;}
+  }catch(_){
+   if(node())node().innerHTML='<div class="hm-empty hm-error">Für diesen Tag kein Verlauf abrufbar (Recorder prüfen).</div>';
+  }
  }
 
 }

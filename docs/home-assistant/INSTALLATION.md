@@ -1,6 +1,6 @@
 # Home Assistant – Installation und Update
 
-**Basis:** Wemos v1.9.6 + Home-Assistant-Tank-Packages v2.1.0 + Heiztakt-Package v1.0.1 (optional) + Seitenpanel v2.3.2 + Lovelace-Karte v2.1.1. Die Dateinamen `heizoel-monitor-card.js` und `heizoel_dashboard_panel` sind aus Bestandskompatibilität bewusst erhalten; sichtbarer Titel „Kellersteuerung“.
+**Basis:** Wemos v1.9.6 + Home-Assistant-Tank-Packages v2.1.0 + Heiztakt-Package v1.0.1 (optional) + Seitenpanel v2.4.0 + Lovelace-Karte v2.1.1. Die Dateinamen `heizoel-monitor-card.js` und `heizoel_dashboard_panel` sind aus Bestandskompatibilität bewusst erhalten; sichtbarer Titel „Kellersteuerung“.
 
 ## 1. Backup
 
@@ -48,7 +48,7 @@ Die **Lovelace-Karte** `custom:heizoel-monitor-card` ist nicht dasselbe wie das 
 
 HA-Konfigurationsprüfung ausführen, danach Home Assistant vollständig neu starten. Die Custom-Card wird unter `/local/heizoel-monitor-card.js` eingebunden. Panel bleibt unter `/heizoel-monitor` erreichbar. Browsercache bei alten JS-Ständen leeren.
 
-## Heizkreis-Anzeige im Seitenpanel v2.3.2
+## Heizkreis-Anzeige im Seitenpanel v2.4.0
 
 Im Seitenleistenpanel `/heizoel-monitor` werden nun **Heizung Vorlauf** (Slot 1), **Heizung Rücklauf** (Slot 2) und **Spreizung = Vorlauf − Rücklauf** (K) angezeigt. Ein eigenes Heizkreis-Diagramm verwendet zwei Skalen: links Temperaturen (°C), rechts die Spreizung (K). Zeiträume: 24 h, 7 Tage, 30 Tage. Die normalen sechs Slots und der bisherige Verlauf bleiben sichtbar.
 
@@ -67,9 +67,9 @@ heizoel_dashboard_panel:
     spread: sensor.heizung_spreizung  # optional, wenn Helfer vorhanden
 ```
 
-**Upgrade ohne Wemos-Flash:** Backup des Ordners `/config/custom_components/heizoel_dashboard_panel/` erstellen. Aus GitHub den vollständigen Ordner `home-assistant/custom_components/heizoel_dashboard_panel/` übernehmen (`__init__.py`, `manifest.json`, `frontend/heizoel-panel.js`). HA-Konfiguration prüfen, Home Assistant vollständig neu starten und Browser mit **Strg+F5** neu laden. Die Registrierung lädt das neue JavaScript mit `?v=2_3_2`, damit der alte Browsercache nicht weiter verwendet wird. Die Lovelace-Karte ist davon unabhängig.
+**Upgrade ohne Wemos-Flash:** Backup des Ordners `/config/custom_components/heizoel_dashboard_panel/` erstellen. Aus GitHub den vollständigen Ordner `home-assistant/custom_components/heizoel_dashboard_panel/` übernehmen (`__init__.py`, `manifest.json`, `frontend/heizoel-panel.js`). HA-Konfiguration prüfen, Home Assistant vollständig neu starten und Browser mit **Strg+F5** neu laden. Die Registrierung lädt das neue JavaScript mit `?v=2_4_0`, damit der alte Browsercache nicht weiter verwendet wird. Die Lovelace-Karte ist davon unabhängig.
 
-## Eigenständiger Bereich „Heizung & Takte“ (Panel v2.3.2)
+## Eigenständiger Bereich „Heizung & Takte“ (Panel v2.4.0)
 
 **Alles für die Heizung ist im neuen Reiter „Heizung & Takte“ gebündelt.** Die Startseite bleibt für allgemeine Sensor-Slots und Relais. „Tank & Verlauf“ und „Ölverbrauch“ enthalten ausschließlich die Heizöldaten. Das generische Temperatur-Slot-Diagramm bleibt im Reiter „Temperatur-Slots“.
 
@@ -84,6 +84,24 @@ Der Reiter zeigt: aktueller Zustand, erkannte Starts heute/Woche, Aktivphasen in
 Package v1.0.1 verhindert die falsche erste Pausenzeit. Das Panel v2.3.2 unterstützt die bestätigten Statistik-IDs mit `rucklauf`, `maximum` und `minimum` und gruppiert die Anzeige. Bereits fehlerhafte Pausenwerte können [gezielt korrigiert werden](HEIZTAKTE.md#live-test-korrektur-v101--panel-v231).
 
 Eine genaue Anleitung, Entitätsliste, Grenzen und Kalibrierhinweise enthält **[HEIZTAKTE.md](HEIZTAKTE.md)**. Es sind **keine Firmware- oder Relaisänderungen** erforderlich.
+
+## Tagesverlauf mit Detailansicht (Panel v2.4.0)
+
+Die Heizkreisgrafik zeigt **nur den aktuellen Kalendertag** ab 00:00 Uhr in der **lokalen Browser-Zeitzone**. Die 7-/30-Tage-Buttons im Heizkreis sind entfallen; die anderen Verläufe (Öltank und sechs allgemeine Temperaturslots) bleiben unverändert.
+
+Über den Knopf **„Tagesdetails öffnen“** beziehungsweise einen Klick auf die Grafik öffnet sich eine vergrößerte Ansicht mit:
+
+- **Kalenderauswahl** und den Schaltflächen **Vortag**, **Nächster Tag**, **Heute**.
+- **Ganzer Tag** oder einzeln **00–06**, **06–12**, **12–18**, **18–24 Uhr**.
+- **Alle Kurven**, **Vorlauf/Rücklauf** ohne Spreizung oder **nur Spreizung**.
+- Angepasster linker °C- und rechter K-Achse, soweit die ausgewählten Kurven dafür Daten haben.
+- Schließen-Knopf und **Esc**-Taste zum Zurückkehren.
+
+Die Abfrage verwendet den Home-Assistant-Recorder für den **konkret ausgewählten Tag**. Heute wird höchstens 60 Sekunden im Browser zwischengespeichert; alte Tage werden aus Gründen der Geschwindigkeit länger im aktuellen Browser-Tab gehalten (maximal 16 Tagesdatensätze). Es werden keine Historien lokal dauerhaft gespeichert.
+
+**Hinweis:** Frühere Tage sind nur verfügbar, wenn Home Assistant sie noch im Recorder aufbewahrt. Bei fehlenden Daten zeigt das Panel einen Hinweis. Kalendertage werden von Mitternacht zu Mitternacht abgefragt, einschließlich der üblichen Sommer-/Winterzeit-Umstellung.
+
+**Update:** Gegenüber v2.3.2 nur die Dateien \`frontend/heizoel-panel.js\`, \`__init__.py\` und \`manifest.json\` des Seitenpanels ersetzen. Keine Änderung am Wemos, der vorhandenen Heiztakt-Auswertung v1.0.1, den Tank-Packages oder an der Lovelace-Karte. Home Assistant vollständig neu starten, danach **Strg+F5**.
 
 ## 5. Status und Verbrauch
 

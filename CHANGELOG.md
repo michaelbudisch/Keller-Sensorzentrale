@@ -1,5 +1,13 @@
 # Changelog
 
+## GitHub-Projektpaket 0.1.10 — 2026-10-21
+
+- Seitenpanel **v2.4.0**: Im Heizkreis steht künftig ausschließlich **heute** im Standarddiagramm statt einer überfüllten 7-/30-Tage-Grafik.
+- **Anklickbare Tagesdetails:** großer Kalenderdialog mit Datumsauswahl, Tag zurück/vor, Heute, ganzer Tag/6-Stunden-Ausschnitte und Filter für Vor-/Rücklauf bzw. Spreizung. Schließen auch per Escape.
+- Tagesbezogene Recorder-Abfragen mit korrekten lokalen Tagesgrenzen und zeitlich begrenztem Browsercache; keine Datenspeicherung oder Berechnung auf dem Wemos.
+- Tank-/Ölverbrauchsverlauf, Sensor-Slot-Verläufe, Heiztakt-Package v1.0.1 und Firmware v1.9.6 bleiben unverändert.
+
+
 ## GitHub-Projektpaket 0.1.9 — 2026-10-20
 
 - **Kellersteuerungs-Panel v2.3.2:** Home-Assistant-Statistik-IDs mit `rucklauf`, `maximum` und `minimum` als feste, geprüfte Varianten berücksichtigt; keine Zuordnung über unscharfe Namen.

@@ -1,6 +1,6 @@
 # Projektstatus – Keller Sensorzentrale
 
-**Stand:** 20.10.2026 · **GitHub-Dokumentationsstand:** v0.1.9 · **Status:** im eigenen Aufbau erprobter Prototyp, kein zertifiziertes Fertigprodukt.
+**Stand:** 20.10.2026 · **GitHub-Dokumentationsstand:** v0.1.10 · **Status:** im eigenen Aufbau erprobter Prototyp, kein zertifiziertes Fertigprodukt.
 
 > **Startpunkt für neue Chats und Beiträge:** Vor Änderungen diese Datei und die jeweils aktuellen GitHub-Quelldateien lesen. Der Code im Branch `main` ist die öffentliche Quellbasis; die genaue Konfiguration des bereits installierten Geräts kann davon abweichen. Für Live-Einstellungen und Probleme stets aktuelle Screenshots, Diagnosedaten oder Konfigurationsauszüge heranziehen. Keine Passwörter oder privaten Zugangsdaten ins Repository übernehmen.
 
@@ -11,7 +11,7 @@ Ein Wemos D1 mini (ESP8266) liest einen Ultraschall-Tanksensor und bis zu sechs 
 | Bereich | Öffentlicher Stand | Praxiserfahrung / Grenzen |
 | --- | --- | --- |
 | ESP8266-Firmware | **v1.9.6 (HA-Lite / Statusfix)** | Eingebauter Wemos übermittelt Tankwerte und MQTT-Status; GitHub-Sketch ist eine von Zugangsdaten bereinigte Vorlage, kein binär identisches Abbild des laufenden Geräts. |
-| Home Assistant | **HA-Pakete v2.1.0, Seitenpanel v2.3.2, Lovelace-Karte v2.1.1** | Tankabstand, geglättete Liter und Gesamtbestand erschienen in HA; Schalten der Relais über MQTT/HA wurde beobachtet. |
+| Home Assistant | **HA-Pakete v2.1.0, Seitenpanel v2.4.0, Lovelace-Karte v2.1.1** | Tankabstand, geglättete Liter und Gesamtbestand erschienen in HA; Schalten der Relais über MQTT/HA wurde beobachtet. |
 | Tankmessung | **Aktiv, ein Sensor** | Bei der letzten Rückmeldung funktionierten Distanzmessung und Literanzeige. Beide mechanischen Tankuhren zeigten ungefähr den gleichen Stand; exakte Messtoleranz nicht bestimmt. |
 | Tankhochrechnung | **Zwei gleichartige Tanks** | Gemessen wird ein Tank; der zweite wird aus gleichem angenommenem Füllstand hochgerechnet. Im HA-Package ist die aktuelle Einzelkapazität **720 L** für den Prozentwert fest hinterlegt; bei anderen Tanks anpassen. |
 | Temperaturslots | **Sechs Buchsen/Slots vorgesehen** | **Zwei angeschlossene DS18B20 an D1 erkannt.** Slot 1 ist als Heizungsvorlauf und Slot 2 als Rücklauf montiert; Screenshot: 37,3 °C und 33,6 °C (3,7 K Spreizung). D2/D5 und Recorder-Verlauf noch nicht getestet. |
@@ -71,7 +71,9 @@ Ein Wemos D1 mini (ESP8266) liest einen Ultraschall-Tanksensor und bis zu sechs 
 - [x] Vorlauf/Rücklauf/Spreizung des Panels v2.2.0 im laufenden Home Assistant mit wiederholten Peaks bestätigt.
 - [x] Erster Live-Test mit Heiztakt-Package v1.0.0 und Panel v2.3.0: mindestens ein erkannter Temperaturzyklus.
 - [x] Korrektur v1.0.1 und Panel v2.3.1 im Live-Test: Startzählung und einzelne Temperaturstatistiken laufen; eine alte fehlerhafte Pause bleibt noch gespeichert.
-- [ ] Panel v2.3.2 installieren und die korrigierte Zuordnung aller sechs 24h-Statistiken im Live-Betrieb verifizieren; falschen Pausenausreißer nach Backup bei Bedarf gezielt korrigieren.
+- [x] Panel v2.3.2: 24h-Statistiken anhand bestätigter Entitätsnamen korrigiert; Live-Status der einzelnen Werte noch weiter beobachten.
+- [ ] Panel v2.4.0 installieren und Tagesgrafik, Datumsauswahl, 6h-Zoom sowie Verfügbarkeit früherer Recorder-Tage in Home Assistant testen.
+- [ ] Falschen Pausenausreißer aus der alten Erstberechnung nach Backup bei Bedarf gezielt korrigieren.
 - [ ] 24h-Statistiken und Temperaturzyklenerkennung über mehrere Tage prüfen.
 - [ ] DS18B20 an D2/D5 ergänzen und Temperaturhistorie prüfen.
 - [ ] Webserver- und MQTT-Stabilität mehrere Tage beobachten, Diagnose erfassen und ggf. HTTP/Heap gezielt optimieren.
