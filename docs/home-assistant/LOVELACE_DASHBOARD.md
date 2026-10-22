@@ -56,3 +56,9 @@ Keine zweite `lovelace:`-Konfiguration anlegen, bestehende Ressourcen-Einstellun
 - [ ] Heiztakt- und Ölverbrauchsstatistik werden unverändert angezeigt
 
 Siehe Home Assistant Dokumentation: [Sections](https://www.home-assistant.io/dashboards/sections/), [Statistics graph](https://www.home-assistant.io/dashboards/statistics-graph/), [Date selection](https://www.home-assistant.io/dashboards/energy/), [History](https://www.home-assistant.io/integrations/history/).
+
+## Native Verbrauchsgrafik und IDs ab v1.0.1
+
+Die Tagesverbrauchskarte benutzt **stat_types: change** mit dem kumulierten Gesamtzähler `sensor.heizoel_verbrauch_gesamt` und **chart_type: bar**. Die 30-Tage-Gesamtverbrauchsgrafik zeigt mit `stat_types: state` den tatsächlich gespeicherten Stand. Die bisherigen `max`-Daten des täglichen Utility-Meters waren für `total_increasing` nicht vorhanden.
+
+Die beiden Utility-Meter-Sensoren **Woche** und **Monat** wurden in der Benutzerinstallation als „Entität nicht gefunden“ angezeigt, obwohl sie in `keller_verbrauch.yaml` definiert sind. Die native Markdown-Karte versucht nun vorhandene Sensor-IDs einschließlich numerischer Suffixe zu finden und zeigt andernfalls ausdrücklich an, dass die Entität fehlt. Das verändert **keine** existierenden Verbrauchszähler. Um die Ursache zu klären, im HA-Entwicklerwerkzeug **Zustände** nach `heizoel_verbrauch` suchen und die tatsächlich existierenden Entity-IDs prüfen.

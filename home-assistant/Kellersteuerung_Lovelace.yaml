@@ -436,12 +436,8 @@ views:
           - type: "tile"
             entity: "sensor.heizoel_verbrauch_heute"
             name: "Heute"
-          - type: "tile"
-            entity: "sensor.heizoel_verbrauch_woche"
-            name: "Woche"
-          - type: "tile"
-            entity: "sensor.heizoel_verbrauch_monat"
-            name: "Monat"
+          - type: "markdown"
+            content: "**Woche / Monat**\n{% set ns = namespace(week=none, month=none) %}\n{% for e in states.sensor %}\n  {% if e.entity_id.startswith('sensor.heizoel_verbrauch_woche') %}\n    {% if ns.week is none or ns.week.state in ['unknown','unavailable'] %}{% set ns.week = e %}{% endif %}\n  {% elif e.entity_id.startswith('sensor.heizoel_verbrauch_monat') %}\n    {% if ns.month is none or ns.month.state in ['unknown','unavailable'] %}{% set ns.month = e %}{% endif %}\n  {% endif %}\n{% endfor %}\n\n**Woche:** {% if ns.week is not none and ns.week.state not in ['unknown','unavailable'] %}{{ ns.week.state }} {{ ns.week.attributes.get('unit_of_measurement','L') }}{% else %}– (Sensor fehlt oder ist nicht verfügbar){% endif %}\n\n**Monat:** {% if ns.month is not none and ns.month.state not in ['unknown','unavailable'] %}{{ ns.month.state }} {{ ns.month.attributes.get('unit_of_measurement','L') }}{% else %}– (Sensor fehlt oder ist nicht verfügbar){% endif %}\n\n{% if ns.week is none or ns.month is none %}*Bitte unter Entwicklerwerkzeuge → Zustände nach \\u0060heizoel_verbrauch\\u0060 suchen; das Package keller_verbrauch.yaml sieht diese Sensoren vor.*{% endif %}"
           - type: "tile"
             entity: "sensor.heizoel_verbrauch_jahr"
             name: "Jahr"
@@ -454,12 +450,13 @@ views:
             heading: "Verbrauchsverlauf"
             icon: "mdi:chart-line"
           - type: "statistics-graph"
-            title: "Tagesverbrauch · 14 Tage (Tagesmaximum)"
+            title: "Geschätzter Tagesverbrauch · 14 Tage"
             entities:
-              - "sensor.heizoel_verbrauch_heute"
-            chart_type: "line"
+              - entity: "sensor.heizoel_verbrauch_gesamt"
+                name: "Verbrauch pro Tag"
+            chart_type: "bar"
             stat_types:
-              - "max"
+              - "change"
             days_to_show: 14
             period: "day"
           - type: "statistics-graph"
@@ -468,9 +465,11 @@ views:
               - "sensor.heizoel_verbrauch_gesamt"
             chart_type: "line"
             stat_types:
-              - "change"
+              - "state"
             days_to_show: 30
             period: "day"
+          - type: "markdown"
+            content: "Der Tagesverbrauch ist die statistische Änderung des Gesamtzählers. Die Grafik zeigt nur Zeiträume, für die Home Assistant Statistiken aufgezeichnet hat."
       - type: "grid"
         cards:
           - type: "heading"

@@ -1,6 +1,6 @@
 # Versionen und Entwicklungsstand
 
-- **GitHub-Dokumentation:** v0.2.0 – [aktueller Projektstatus](PROJECT_STATUS.md).
+- **GitHub-Dokumentation:** v0.2.1 – [aktueller Projektstatus](PROJECT_STATUS.md).
 
 - **Firmware:** v1.9.6 Statusfix / HA-Lite (ESP8266-Arduino), publizierte Datei nach Entfernung der Zugangsdaten und Umbenennung in `KellerSensorzentrale.ino`.
 - **Home Assistant – neue Anzeige:** natives Lovelace-Dashboard v1.0.0 mit sieben Ansichten, ohne HACS; alte Ansicht zur Kompatibilität weiter im Repo.\n- **Home Assistant:** HA-Tank-Pakete v2.1.0, Heiztakt-Package v1.0.1 (optional), Seitenpanel v2.4.0 und Lovelace-Karte v2.1.1; der bestätigte Abstand-Entity-Name wurde korrigiert.

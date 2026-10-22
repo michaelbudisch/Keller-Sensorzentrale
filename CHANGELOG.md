@@ -1,5 +1,12 @@
 # Changelog
 
+## GitHub-Projektpaket 0.2.1 — 2026-10-23
+
+- Lovelace Verbrauchsseite v1.0.1: Tagesverbrauch über tägliche Änderung (`change`) des kumulierten Sensors (`total_increasing`) als Balkendiagramm; Gesamtverbrauch über Statistiktyp `state`.
+- Wochen-/Monatssensoren werden bei abweichenden HA-IDs über eine dynamische native Markdown-Anzeige erkannt; bei fehlender Entität erscheint eine klare Diagnose statt einer fehlerhaften Tile. Bestehende Sensorwerte, Helfer und Wemos-Firmware bleiben unverändert.
+- Live-Test der beiden fehlenden Utility-Meter-Entitäten steht aus.
+
+
 ## GitHub-Projektpaket 0.2.0 — 2026-10-22
 
 - Neues vollständig **natives Lovelace-Dashboard** `home-assistant/Kellersteuerung_Lovelace.yaml`: 7 Ansichten, Standardkarten ohne HACS und ohne selbst programmiertes Frontend.
