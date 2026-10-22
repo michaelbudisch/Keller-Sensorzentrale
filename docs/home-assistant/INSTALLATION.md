@@ -1,5 +1,7 @@
 # Home Assistant – Installation und Update
 
+**Neues natives Dashboard:** Für die tägliche Bedienung ist inzwischen [Kellersteuerung_Lovelace.yaml](../../home-assistant/Kellersteuerung_Lovelace.yaml) die empfohlene Oberfläche. Es benötigt **keine JavaScript- oder HACS-Karten**. Die eigenständige Anleitung ist [LOVELACE_DASHBOARD.md](LOVELACE_DASHBOARD.md). Die folgende Beschreibung dokumentiert zusätzlich die **ältere** Lovelace-Karte und das Seitenpanel zur Bestandskompatibilität.
+
 **Basis:** Wemos v1.9.6 + Home-Assistant-Tank-Packages v2.1.0 + Heiztakt-Package v1.0.1 (optional) + Seitenpanel v2.4.0 + Lovelace-Karte v2.1.1. Die Dateinamen `heizoel-monitor-card.js` und `heizoel_dashboard_panel` sind aus Bestandskompatibilität bewusst erhalten; sichtbarer Titel „Kellersteuerung“.
 
 ## 1. Backup

@@ -2,11 +2,17 @@
 
 **ESP8266 / Wemos D1 mini · Tankfüllstand · 6 DS18B20-Slots · 2 Relais · MQTT & Home Assistant**
 
-**Softwarestand:** Firmware v1.9.6 · HA-Pakete v2.1.0 · **Seitenpanel v2.4.0** · Lovelace-Karte v2.1.1 ([Installationshinweise bei alter Heizölmonitor-Karte](docs/home-assistant/INSTALLATION.md#lovelace-karte-alte-anzeige-oder-falscher-gesamtbestand)).
+**Softwarestand:** Firmware v1.9.6 · HA-Pakete v2.1.0 · **neues natives Lovelace-Dashboard v1.0.0** · bisheriges Seitenpanel v2.4.0 · Lovelace-Karte v2.1.1 ([Installationshinweise bei alter Heizölmonitor-Karte](docs/home-assistant/INSTALLATION.md#lovelace-karte-alte-anzeige-oder-falscher-gesamtbestand)).
 
 Eine modulare Sensorzentrale für den Heizungskeller: Das kleine Board sammelt Messwerte und stellt sie per MQTT bereit. Home Assistant übernimmt die Langzeitverläufe, die 5-Minuten-Glättung und die (optional aktivierte) Heizöl-Verbrauchsauswertung.
 
 > **Projektstatus: erprobter Prototyp, kein zertifiziertes Fertigprodukt.** Die Wemos-Firmware v1.9.6 und das Home-Assistant-Paket v2.1.0 wurden aus dem tatsächlich verwendeten Entwicklungsstand übernommen. Es gibt keinen vollständigen reproduzierbaren Hardware-, Kompilier- oder HA-Integrationstest für diesen GitHub-Export. Beim ersten Nachbau Pins und Spannungen messen.
+
+## Neues Lovelace-Dashboard (empfohlen)
+
+**[→ Kellersteuerung_Lovelace.yaml](home-assistant/Kellersteuerung_Lovelace.yaml)** · **[→ Installationsanleitung](docs/home-assistant/LOVELACE_DASHBOARD.md)**
+
+Die frühere Eigenentwicklung des Seitenpanels ist für neue Installationen **nicht erforderlich**. Das native Dashboard nutzt ausschließlich Home-Assistant-Karten und umfasst **7 Ansichten**: Übersicht, Heizkreis, Heiztakte, Temperaturen, Öltank, Verbrauch und System. In der Heizkreis-Ansicht steuert ein integrierter **Datumswähler** die Temperatur- und Spreizungs-Statistikgrafiken; eine Verknüpfung zur HA-Historie zeigt detaillierte Messpunkte. Bisherige Panels/Karten bleiben zur Kompatibilität im Projekt und können parallel betrieben werden.
 
 ## Aktueller Entwicklungsstand
 

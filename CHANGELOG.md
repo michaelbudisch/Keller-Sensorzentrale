@@ -1,5 +1,14 @@
 # Changelog
 
+## GitHub-Projektpaket 0.2.0 — 2026-10-22
+
+- Neues vollständig **natives Lovelace-Dashboard** `home-assistant/Kellersteuerung_Lovelace.yaml`: 7 Ansichten, Standardkarten ohne HACS und ohne selbst programmiertes Frontend.
+- Heizkreis: übersichtliche 6-Stunden-Rohhistorie sowie zwei getrennte `statistics-graph`-Karten für Temperatur (°C) und Spreizung (K), mit gekoppeltem `energy-date-selection`-Kalender.
+- Tank / Verbrauch / Heiztakte / sechs DS18B20-Slots / Relais / Diagnose zusammengefasst, auf Basis der bekannten HA-Entitäts-IDs.
+- Relais-Kacheln öffnen zunächst die Detailansicht statt direkt umzuschalten. Mess-/Verbrauchszähler, Recorder, Wemos-Firmware und alte Lovelace-Karten bleiben unverändert.
+- Import per HA-Dashboard-Editor oder als YAML-Datei in `lovelace.dashboards` dokumentiert. Live-Test in der Nutzerinstallation steht noch aus.
+
+
 ## GitHub-Projektpaket 0.1.10 — 2026-10-21
 
 - Seitenpanel **v2.4.0**: Im Heizkreis steht künftig ausschließlich **heute** im Standarddiagramm statt einer überfüllten 7-/30-Tage-Grafik.

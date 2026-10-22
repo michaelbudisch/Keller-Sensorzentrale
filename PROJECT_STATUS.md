@@ -1,8 +1,12 @@
 # Projektstatus – Keller Sensorzentrale
 
-**Stand:** 20.10.2026 · **GitHub-Dokumentationsstand:** v0.1.10 · **Status:** im eigenen Aufbau erprobter Prototyp, kein zertifiziertes Fertigprodukt.
+**Stand:** 20.10.2026 · **GitHub-Dokumentationsstand:** v0.2.0 · **Status:** im eigenen Aufbau erprobter Prototyp, kein zertifiziertes Fertigprodukt.
 
 > **Startpunkt für neue Chats und Beiträge:** Vor Änderungen diese Datei und die jeweils aktuellen GitHub-Quelldateien lesen. Der Code im Branch `main` ist die öffentliche Quellbasis; die genaue Konfiguration des bereits installierten Geräts kann davon abweichen. Für Live-Einstellungen und Probleme stets aktuelle Screenshots, Diagnosedaten oder Konfigurationsauszüge heranziehen. Keine Passwörter oder privaten Zugangsdaten ins Repository übernehmen.
+
+## Neuestes Frontend: natives Lovelace-Dashboard
+
+Seit dem 22.10.2026 steht **`home-assistant/Kellersteuerung_Lovelace.yaml`** als neue Standardoberfläche zur Verfügung. Sie wurde statisch validiert, ist aber **noch nicht live im HA des Nutzers getestet**. Sie ersetzt bei erfolgreichem Einsatz das bisherige **eigene** Seitenpanel im Alltag, ohne dessen Installation oder Dateien zu löschen. Einbindung und fehlende Entitätsnamen stehen in [LOVELACE_DASHBOARD.md](docs/home-assistant/LOVELACE_DASHBOARD.md).
 
 ## 1. Projektüberblick
 
