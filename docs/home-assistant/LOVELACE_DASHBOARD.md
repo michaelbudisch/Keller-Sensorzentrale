@@ -62,3 +62,12 @@ Siehe Home Assistant Dokumentation: [Sections](https://www.home-assistant.io/das
 Die Tagesverbrauchskarte benutzt **stat_types: change** mit dem kumulierten Gesamtzähler `sensor.heizoel_verbrauch_gesamt` und **chart_type: bar**. Die 30-Tage-Gesamtverbrauchsgrafik zeigt mit `stat_types: state` den tatsächlich gespeicherten Stand. Die bisherigen `max`-Daten des täglichen Utility-Meters waren für `total_increasing` nicht vorhanden.
 
 Die beiden Utility-Meter-Sensoren **Woche** und **Monat** wurden in der Benutzerinstallation als „Entität nicht gefunden“ angezeigt, obwohl sie in `keller_verbrauch.yaml` definiert sind. Die native Markdown-Karte versucht nun vorhandene Sensor-IDs einschließlich numerischer Suffixe zu finden und zeigt andernfalls ausdrücklich an, dass die Entität fehlt. Das verändert **keine** existierenden Verbrauchszähler. Um die Ursache zu klären, im HA-Entwicklerwerkzeug **Zustände** nach `heizoel_verbrauch` suchen und die tatsächlich existierenden Entity-IDs prüfen.
+
+
+## Bestätigte Wochen-/Monats-Entitäten (Lovelace v1.0.2)
+
+Die Zustandsliste aus der realen HA-Installation zeigt **`sensor.heizoel_verbrauch_kalenderwoche`** und **`sensor.heizoel_verbrauch_kalendermonat`** (beide 0 L). Der vorherige Suchansatz per Markdown (v1.0.1) wurde durch zwei native **Tile-Karten** mit genau diesen IDs ersetzt. Die IDs `sensor.heizoel_verbrauch_woche` und `sensor.heizoel_verbrauch_monat` sind in der bestehenden HA-Installation nicht vorhanden. Diese Namen können vom YAML-Utility-Meter-Paket abweichen, wenn bereits Entitäten manuell umbenannt wurden.
+
+**Zählerbasis beibehalten:** `sensor.heizoel_verbrauch_gesamt` = 33,2 L ist der aktuell angezeigte Gesamtzähler; der separate Altzähler `sensor.heizoel_verbrauch_kumuliert` = 0 L ist **nicht** die Quelle des Dashboards. Keinen der beiden Zähler allein wegen der UI korrigieren oder zurücksetzen.
+
+Die beiden Statistik-Grafiken bleiben an `sensor.heizoel_verbrauch_gesamt` gebunden: Tagesverbrauch = `change` pro Tag (Balken), kumulierter Stand = `state`. Anfangs können mangels Recorder-Statistiken wenige oder keine Säulen erscheinen.

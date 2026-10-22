@@ -1,5 +1,12 @@
 # Changelog
 
+## GitHub-Projektpaket 0.2.2 — 2026-10-23
+
+- Lovelace-Dashboard **v1.0.2**: Wochen- und Monatsverbrauch zeigen jetzt direkt die in der echten Home-Assistant-Installation bestätigten Entitäten `sensor.heizoel_verbrauch_kalenderwoche` und `sensor.heizoel_verbrauch_kalendermonat` an. Die vorläufige Markdown-Suche aus v1.0.1 entfällt.
+- Die täglichen Verbrauchsbalken (`change`) und die kumulierte Verbrauchsstatistik (`state`) bleiben an `sensor.heizoel_verbrauch_gesamt` gebunden. Der separat vorhandene Altzähler `sensor.heizoel_verbrauch_kumuliert` wird nicht für die Auswertung verwendet.
+- Keine Änderung an Tank- oder Heiztaktberechnung, Zählerständen, Wemos-Firmware oder MQTT.
+
+
 ## GitHub-Projektpaket 0.2.1 — 2026-10-23
 
 - Lovelace Verbrauchsseite v1.0.1: Tagesverbrauch über tägliche Änderung (`change`) des kumulierten Sensors (`total_increasing`) als Balkendiagramm; Gesamtverbrauch über Statistiktyp `state`.

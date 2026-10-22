@@ -1,6 +1,6 @@
 # Projektstatus – Keller Sensorzentrale
 
-**Stand:** 20.10.2026 · **GitHub-Dokumentationsstand:** v0.2.1 · **Status:** im eigenen Aufbau erprobter Prototyp, kein zertifiziertes Fertigprodukt.
+**Stand:** 20.10.2026 · **GitHub-Dokumentationsstand:** v0.2.2 · **Status:** im eigenen Aufbau erprobter Prototyp, kein zertifiziertes Fertigprodukt.
 
 > **Startpunkt für neue Chats und Beiträge:** Vor Änderungen diese Datei und die jeweils aktuellen GitHub-Quelldateien lesen. Der Code im Branch `main` ist die öffentliche Quellbasis; die genaue Konfiguration des bereits installierten Geräts kann davon abweichen. Für Live-Einstellungen und Probleme stets aktuelle Screenshots, Diagnosedaten oder Konfigurationsauszüge heranziehen. Keine Passwörter oder privaten Zugangsdaten ins Repository übernehmen.
 
@@ -107,3 +107,8 @@ Ein Wemos D1 mini (ESP8266) liest einen Ultraschall-Tanksensor und bis zu sechs 
 ---
 
 *Diese Datei beschreibt den zuletzt **berichteten** Entwicklungs- und Teststand; sie ist kein automatischer Live-Status des Wemos oder von Home Assistant.*
+
+
+## Live-Abgleich Ölverbrauch (23.10.2026)
+
+Screenshots der HA-Zustandsliste bestätigen `sensor.heizoel_verbrauch_kalenderwoche` = 0 L und `sensor.heizoel_verbrauch_kalendermonat` = 0 L. Der für das Verbrauchs-Package genutzte `sensor.heizoel_verbrauch_gesamt` steht bei 33,2 L; ein separater Sensor `sensor.heizoel_verbrauch_kumuliert` steht dagegen auf 0 L und wird **nicht** als Ersatz eingetragen. Das Lovelace-Dashboard v1.0.2 verwendet genau die bestätigten Entitäten. Keine Änderung der Verbrauchs-Engine oder gespeicherter Zählerstände.
